@@ -46,7 +46,7 @@ if os.path.exists("anh2.jpg"):
         with open("anh2.jpg", "rb") as f:
             img_data = f.read()
             header_image_base64 = base64.b64encode(img_data).decode()
-    except Exception as e:
+    except Exception:
         header_image_base64 = None
 
 
@@ -67,6 +67,7 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         gap: 2rem;
+        flex-wrap: wrap;
     }
     .header-content {
         text-align: center;
@@ -92,17 +93,23 @@ st.markdown("""
         border-radius: 50%;
         overflow: hidden;
         border: 2px solid #1a1a1a;
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #f7f7f7;
+        background: #f5f5f5;
     }
     .header-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+    .header-image .placeholder {
+        font-size: 0.5rem;
+        color: #cccccc;
+        text-align: center;
+        letter-spacing: 1px;
     }
     
     .sidebar-title {
@@ -289,13 +296,6 @@ st.markdown("""
         padding: 0.3rem 0;
     }
     
-    .extra-input {
-        margin: 0.5rem 0;
-        padding: 0.5rem;
-        border: 1px solid #eeeeee;
-        background: #fafafa;
-    }
-    
     .prediction-item {
         padding: 0.2rem 0;
     }
@@ -462,7 +462,7 @@ if header_image_base64 is not None:
 else:
     header_html += """
     <div class="header-image">
-        <span style="font-size:0.6rem;color:#cccccc;">No image</span>
+        <span class="placeholder">No Image</span>
     </div>
     """
 
