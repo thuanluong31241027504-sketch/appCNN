@@ -17,22 +17,12 @@ st.set_page_config(
 
 # ==================== DANH SÁCH MÓN ĂN ====================
 CLASS_NAMES = [
-    'Cơm trắng', 'Đậu hũ sốt cà', 'Cá hú kho', 
-    'Thịt kho trứng', 'Thịt kho', 'Canh chua có cá',
-    'Canh chua không cá', 'Sườn nướng', 'Canh rau', 
-    'Rau xào', 'Trứng chiên'
+    '01. Cơm trắng', '02. Đậu hũ sốt cà', '03. Cá hú kho', 
+    '04. Thịt kho trứng', '05. Thịt kho', '06. Canh chua',
+    '07. Sườn nướng', '08. Canh rau', '09. Rau xào', '10. Trứng chiên'
 ]
 
-PRICES = [10000, 25000, 30000, 30000, 25000, 25000, 10000, 30000, 7000, 10000, 25000]
-
-MENU = []
-for i, name in enumerate(CLASS_NAMES):
-    MENU.append({
-        "id": i,
-        "name": name,
-        "price": PRICES[i],
-        "category": "Món ăn"
-    })
+PRICES = [10000, 25000, 30000, 30000, 25000, 25000, 30000, 7000, 10000, 25000]
 
 def get_food_name(food_id):
     if 0 <= food_id < len(CLASS_NAMES):
@@ -44,37 +34,46 @@ def get_food_price(food_id):
         return PRICES[food_id]
     return 0
 
-def calculate_total(food_ids):
-    details = []
-    total = 0
-    for fid in food_ids:
-        name = get_food_name(fid)
-        price = get_food_price(fid)
-        details.append({"name": name, "price": price})
-        total += price
-    return total, details
-
-# ==================== HÀM XỬ LÝ ẢNH ====================
+# ==================== HÀM XỬ LÝ ẢNH (CODE GỐC) ====================
 def load_image(uploaded_file):
+    """Đọc ảnh từ file upload"""
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img
 
 def preprocess_image(img, target_size=(224, 224)):
+    """Tiền xử lý ảnh cho model"""
     img_resized = cv2.resize(img, target_size)
     img_array = np.expand_dims(img_resized, axis=0).astype(np.float32) / 255.0
     return img_array
 
+def crop_food_tray(image_path):
+    """Cắt ảnh khay cơm thành 5 ô - CODE GỐC"""
+    img = cv2.imread(image_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (1400, 1300))
+    
+    regions = {
+        "canhrau": img[40:700, 40:760],
+        "comtrang": img[40:700, 820:1380],
+        "rausong": img[760:1280, 30:500],
+        "cakho": img[760:1280, 520:920],
+        "thitkho": img[760:1280, 950:1380]
+    }
+    
+    return regions
+
 def crop_food_items(image):
+    """Cắt ảnh từ numpy array - dùng cho Streamlit"""
     img = cv2.resize(image, (1400, 1300))
     
     regions = {
-        "vung_1": img[40:700, 40:760],
-        "vung_2": img[40:700, 820:1380],
-        "vung_3": img[760:1280, 30:500],
-        "vung_4": img[760:1280, 520:920],
-        "vung_5": img[760:1280, 950:1380]
+        "canhrau": img[40:700, 40:760],
+        "comtrang": img[40:700, 820:1380],
+        "rausong": img[760:1280, 30:500],
+        "cakho": img[760:1280, 520:920],
+        "thitkho": img[760:1280, 950:1380]
     }
     
     cropped_results = []
@@ -89,6 +88,7 @@ def crop_food_items(image):
     return cropped_results, img
 
 def draw_boxes_fixed(img, results):
+    """Vẽ box lên ảnh gốc"""
     img_copy = img.copy()
     
     positions = {
@@ -290,10 +290,10 @@ with st.sidebar:
     st.markdown("### MENU")
     st.markdown("---")
     
-    for item in MENU:
+    for i, name in enumerate(CLASS_NAMES):
         st.markdown(
-            f"<div class='menu-item'>{item['name']} "
-            f"<span class='menu-price'>{item['price']:,} VND</span></div>",
+            f"<div class='menu-item'>{name} "
+            f"<span class='menu-price'>{PRICES[i]:,} VND</span></div>",
             unsafe_allow_html=True
         )
     
@@ -412,7 +412,13 @@ with col_right:
                             st.error(f"Error: {str(e)}")
             
             if detected_foods:
-                total_price, details = calculate_total(detected_foods)
+                total_price = sum([get_food_price(fid) for fid in detected_foods])
+                details = []
+                for fid in detected_foods:
+                    details.append({
+                        "name": get_food_name(fid),
+                        "price": get_food_price(fid)
+                    })
                 
                 st.markdown(f"""
                 <div class="summary-grid">
