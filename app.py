@@ -34,81 +34,340 @@ def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name=
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
-    * { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    * {
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
+    }
     .header {
-        background: #ffffff; padding: 1.2rem 2rem; border: 1px solid #000000;
-        margin-bottom: 1.5rem; text-align: center;
+        background: #ffffff;
+        padding: 1.2rem 2rem;
+        border: 1px solid #000000;
+        margin-bottom: 1.5rem;
+        text-align: center;
     }
     .header h1 {
-        font-size: 1.2rem; font-weight: 300; letter-spacing: 4px;
-        color: #000000; margin: 0;
+        font-size: 1.2rem;
+        font-weight: 300;
+        letter-spacing: 4px;
+        color: #000000;
+        margin: 0;
     }
     .header p {
-        font-size: 0.6rem; color: #666666; margin: 0.2rem 0 0 0;
-        font-weight: 300; letter-spacing: 2px;
+        font-size: 0.6rem;
+        color: #666666;
+        margin: 0.2rem 0 0 0;
+        font-weight: 300;
+        letter-spacing: 2px;
     }
     .menu-item {
-        padding: 0.25rem 0; border-bottom: 1px solid #e0e0e0;
-        font-size: 0.65rem; color: #333333; font-weight: 300;
+        padding: 0.25rem 0;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 0.65rem;
+        color: #333333;
+        font-weight: 300;
     }
-    .menu-price { float: right; color: #000000; font-weight: 400; }
-    .invoice-row {
-        display: flex; justify-content: space-between; padding: 0.3rem 0;
-        border-bottom: 1px solid #f0f0f0; font-size: 0.65rem; color: #333333;
+    .menu-item:hover {
+        border-bottom: 1px solid #000000;
+        padding-left: 0.5rem;
+        transition: all 0.3s;
     }
-    .invoice-total {
-        display: flex; justify-content: space-between; padding: 0.5rem 0;
-        border-top: 2px solid #000000; font-size: 0.75rem; font-weight: 600;
-        color: #000000; margin-top: 0.3rem;
+    .menu-price {
+        float: right;
+        color: #000000;
+        font-weight: 400;
     }
-    .footer {
-        text-align: center; padding: 1rem 0 0.3rem 0; color: #cccccc;
-        font-size: 0.45rem; border-top: 1px solid #000000;
-        margin-top: 1rem; letter-spacing: 2px;
+    .pushable {
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        outline-offset: 4px;
+        outline: none;
+        width: 100%;
     }
-    .summary-grid {
-        display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin: 0.8rem 0;
+    .pushable:focus {
+        outline: none;
     }
-    .summary-item {
-        border: 1px solid #000000; padding: 0.6rem; text-align: center; background: #ffffff;
+    .front {
+        display: block;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.6rem;
+        font-weight: 400;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        background: #ffffff;
+        color: #000000;
+        transform: translateY(-4px);
+        border: 1px solid #000000;
+        transition: all 0.1s ease;
+        box-shadow: 0 2px 0 #000000, 0 4px 0 #000000;
     }
-    .summary-item .value {
-        font-size: 1.1rem; font-weight: 300; color: #000000;
+    .pushable:hover .front {
+        background: #000000;
+        color: #ffffff;
+        box-shadow: 0 1px 0 #000000, 0 2px 0 #000000;
+        transform: translateY(-2px);
     }
-    .summary-item .desc {
-        font-size: 0.45rem; color: #666666; font-weight: 300;
-        letter-spacing: 2px; text-transform: uppercase; margin-top: 0.1rem;
+    .pushable:active .front {
+        box-shadow: 0 0px 0 #000000, 0 0px 0 #000000;
+        transform: translateY(0px);
     }
-    .badge-high {
-        color: #000000; font-size: 0.5rem; font-weight: 400; letter-spacing: 1px;
-        border: 1px solid #000000; padding: 0.1rem 0.6rem; display: inline-block;
+    .pushable-secondary {
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        outline-offset: 4px;
+        outline: none;
+        width: 100%;
     }
-    .badge-medium {
-        color: #666666; font-size: 0.5rem; font-weight: 400; letter-spacing: 1px;
-        border: 1px solid #666666; padding: 0.1rem 0.6rem; display: inline-block;
+    .pushable-secondary .front-secondary {
+        display: block;
+        padding: 0.4rem 1.5rem;
+        font-size: 0.5rem;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        background: transparent;
+        color: #666666;
+        transform: translateY(-3px);
+        border: 1px solid #cccccc;
+        transition: all 0.1s ease;
+        box-shadow: 0 1px 0 #cccccc, 0 2px 0 #cccccc;
     }
-    .badge-low {
-        color: #999999; font-size: 0.5rem; font-weight: 400; letter-spacing: 1px;
-        border: 1px solid #999999; padding: 0.1rem 0.6rem; display: inline-block;
+    .pushable-secondary:hover .front-secondary {
+        color: #000000;
+        border-color: #000000;
+        box-shadow: 0 1px 0 #000000, 0 2px 0 #000000;
+        transform: translateY(-2px);
     }
-    .qr-container {
-        border: 1px solid #000000; padding: 0.8rem; text-align: center;
-        background: #ffffff; margin: 0.5rem 0;
+    .pushable-secondary:active .front-secondary {
+        box-shadow: 0 0px 0 #000000, 0 0px 0 #000000;
+        transform: translateY(0px);
     }
-    .qr-container img { max-width: 130px; height: auto; }
     .streamlit-expanderHeader {
         font-family: 'JetBrains Mono', monospace !important;
-        background: #ffffff !important; border: 1px solid #000000 !important;
-        border-radius: 0px !important; color: #000000 !important;
-        font-size: 0.6rem !important; font-weight: 300 !important;
-        letter-spacing: 2px !important; text-transform: uppercase !important;
+        background: #ffffff !important;
+        border: 1px solid #000000 !important;
+        border-radius: 0px !important;
+        color: #000000 !important;
+        font-size: 0.6rem !important;
+        font-weight: 300 !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
     }
     .streamlit-expanderHeader:hover {
-        background: #000000 !important; color: #ffffff !important;
+        background: #000000 !important;
+        color: #ffffff !important;
+    }
+    .streamlit-expanderContent {
+        background: #ffffff !important;
+        border: 1px solid #000000 !important;
+        border-top: none !important;
+        border-radius: 0px !important;
+        padding: 0.8rem !important;
+    }
+    .total-card {
+        background: #ffffff;
+        border: 1px solid #000000;
+        padding: 1.2rem;
+        text-align: center;
+        margin: 0.8rem 0;
+    }
+    .total-card .label {
+        color: #666666;
+        font-size: 0.55rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+    }
+    .total-card .amount {
+        color: #000000;
+        font-size: 2rem;
+        font-weight: 300;
+        letter-spacing: 2px;
+        margin: 0.2rem 0;
+    }
+    .total-card .summary {
+        color: #666666;
+        font-size: 0.55rem;
+        font-weight: 300;
+        letter-spacing: 1px;
+    }
+    .invoice-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.3rem 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.65rem;
+        color: #333333;
+    }
+    .invoice-row .tray {
+        font-weight: 300;
+        color: #666666;
+    }
+    .invoice-row .item-name {
+        font-weight: 400;
+    }
+    .invoice-row .item-price {
+        font-weight: 400;
+        color: #000000;
+    }
+    .invoice-total {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-top: 2px solid #000000;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #000000;
+        margin-top: 0.3rem;
+    }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.5rem;
+        margin: 0.8rem 0;
+    }
+    .summary-item {
+        border: 1px solid #000000;
+        padding: 0.6rem;
+        text-align: center;
+        background: #ffffff;
+    }
+    .summary-item .value {
+        font-size: 1.1rem;
+        font-weight: 300;
+        color: #000000;
+    }
+    .summary-item .desc {
+        font-size: 0.45rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 0.1rem;
+    }
+    .qr-container {
+        border: 1px solid #000000;
+        padding: 0.8rem;
+        text-align: center;
+        background: #ffffff;
+        margin: 0.5rem 0;
+    }
+    .qr-container img {
+        max-width: 130px;
+        height: auto;
+    }
+    .qr-container .qr-label {
+        font-size: 0.45rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 0.2rem;
+    }
+    .qr-container .qr-amount {
+        font-size: 1rem;
+        font-weight: 300;
+        color: #000000;
+        margin: 0.15rem 0;
+    }
+    .qr-container .qr-bank {
+        font-size: 0.5rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 1px;
+    }
+    .stAlert {
+        border-radius: 0px !important;
+        background: #f5f5f5 !important;
+        border-left: 3px solid #000000 !important;
+        color: #333333 !important;
+        font-weight: 300 !important;
+        font-size: 0.65rem !important;
+    }
+    .badge-high {
+        color: #000000;
+        font-size: 0.5rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+        border: 1px solid #000000;
+        padding: 0.1rem 0.6rem;
+        display: inline-block;
+    }
+    .badge-medium {
+        color: #666666;
+        font-size: 0.5rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+        border: 1px solid #666666;
+        padding: 0.1rem 0.6rem;
+        display: inline-block;
+    }
+    .badge-low {
+        color: #999999;
+        font-size: 0.5rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+        border: 1px solid #999999;
+        padding: 0.1rem 0.6rem;
+        display: inline-block;
+    }
+    .stImage figcaption {
+        color: #666666 !important;
+        font-size: 0.5rem !important;
+        font-weight: 300 !important;
+        letter-spacing: 1px !important;
+        text-align: center !important;
     }
     .stFileUploader {
-        background: #ffffff !important; border: 1px dashed #000000 !important;
-        border-radius: 0px !important; padding: 0.6rem !important;
+        background: #ffffff !important;
+        border: 1px dashed #000000 !important;
+        border-radius: 0px !important;
+        padding: 0.6rem !important;
+    }
+    .stFileUploader:hover {
+        border-style: solid !important;
+    }
+    .stFileUploader label {
+        color: #666666 !important;
+        font-weight: 300 !important;
+        letter-spacing: 1px !important;
+        font-size: 0.65rem !important;
+    }
+    .css-1d391kg {
+        background-color: #ffffff !important;
+        border-right: 1px solid #000000 !important;
+    }
+    .css-1d391kg .stMarkdown {
+        color: #333333 !important;
+    }
+    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
+        color: #000000 !important;
+        font-weight: 300 !important;
+        letter-spacing: 2px !important;
+        font-size: 0.9rem !important;
+    }
+    hr {
+        border: none;
+        border-top: 1px solid #000000;
+        margin: 0.8rem 0;
+    }
+    .footer {
+        text-align: center;
+        padding: 1rem 0 0.3rem 0;
+        color: #cccccc;
+        font-size: 0.45rem;
+        border-top: 1px solid #000000;
+        margin-top: 1rem;
+        letter-spacing: 2px;
+    }
+    ::-webkit-scrollbar {
+        width: 3px;
+        background: #f5f5f5;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #000000;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -119,7 +378,11 @@ def check_model_files():
     for name in possible_names:
         if os.path.exists(name):
             size = os.path.getsize(name) / (1024 * 1024)
-            model_files.append({'name': name, 'size': size, 'path': os.path.abspath(name)})
+            model_files.append({
+                'name': name,
+                'size': size,
+                'path': os.path.abspath(name)
+            })
     return model_files
 
 @st.cache_resource
@@ -177,7 +440,10 @@ col_left, col_right = st.columns([2.5, 1.5])
 
 with col_left:
     st.markdown("### UPLOAD")
-    uploaded_file = st.file_uploader("Select image", type=['jpg', 'jpeg', 'png'])
+    uploaded_file = st.file_uploader(
+        "Select image",
+        type=['jpg', 'jpeg', 'png']
+    )
     if uploaded_file is not None:
         image = load_image(uploaded_file)
         st.image(image, caption="INPUT", use_column_width=True)
@@ -269,15 +535,19 @@ with col_right:
                         <div class="desc">Total</div>
                     </div>
                 </div>
-                """.format(len(detected_foods), len(set(detected_foods)), total_price), unsafe_allow_html=True)
+                """.format(
+                    len(detected_foods),
+                    len(set(detected_foods)),
+                    total_price
+                ), unsafe_allow_html=True)
                 with st.expander("INVOICE DETAILS", expanded=True):
                     invoice_html = ""
                     for i, detail in enumerate(details):
                         invoice_html += f"""
                         <div class="invoice-row">
-                            <span>#{i+1}</span>
-                            <span>{detail['name']}</span>
-                            <span>{detail['price']:,} VND</span>
+                            <span class="tray">#{i+1}</span>
+                            <span class="item-name">{detail['name']}</span>
+                            <span class="item-price">{detail['price']:,} VND</span>
                         </div>
                         """
                     invoice_html += f"""
@@ -310,7 +580,7 @@ with col_right:
                                 <div class="qr-label">LUONG NGOC THUAN</div>
                             </div>
                             """, unsafe_allow_html=True)
-                        except Exception:
+                        except Exception as e:
                             st.caption("QR generation error")
         else:
             st.warning("No trays detected")
