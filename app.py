@@ -28,16 +28,16 @@ st.markdown("""
     }
     
     .main {
-        background: #0d0d0d;
+        background: #0a0a0a;
     }
     
     .header {
-        background: #1a1a1a;
+        background: #111111;
         padding: 2.5rem 2rem;
         border-radius: 0px;
         margin-bottom: 2rem;
         text-align: center;
-        border-bottom: 1px solid #2a2a2a;
+        border-bottom: 1px solid #1a1a1a;
     }
     .header h1 {
         font-size: 1.8rem;
@@ -45,47 +45,139 @@ st.markdown("""
         letter-spacing: 4px;
         color: #00ff41;
         margin: 0;
-        text-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        text-shadow: 0 0 20px rgba(0, 255, 65, 0.05);
     }
     .header p {
         font-size: 0.8rem;
-        color: #666666;
+        color: #555555;
         margin: 0.5rem 0 0 0;
         font-weight: 300;
         letter-spacing: 2px;
     }
     
-    /* Terminal style */
-    .terminal {
-        background: #0d0d0d;
-        border: 1px solid #1a1a1a;
-        padding: 1.5rem;
+    /* ===== PUSHABLE BUTTON ===== */
+    .pushable {
+        background: #1a1a1a;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        outline-offset: 4px;
+        outline: none;
+        width: 100%;
+        transition: all 0.1s ease;
+    }
+    .pushable:focus {
+        outline: none;
+    }
+    .front {
+        display: block;
+        padding: 0.8rem 1.5rem;
         border-radius: 0px;
-        margin: 1rem 0;
-    }
-    .terminal-text {
+        font-size: 0.75rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        background: #1a1a1a;
         color: #00ff41;
-        font-size: 0.8rem;
-        font-weight: 300;
+        transform: translateY(-6px);
+        border: 1px solid #2a2a2a;
+        transition: all 0.1s ease;
+        box-shadow: 
+            0 4px 0 #0a0a0a,
+            0 8px 0 #0a0a0a,
+            0 12px 0 #0a0a0a;
+        text-shadow: 0 0 10px rgba(0, 255, 65, 0.05);
     }
-    .terminal-text-gray {
-        color: #666666;
-        font-size: 0.8rem;
-        font-weight: 300;
+    .pushable:hover .front {
+        background: #00ff41;
+        color: #0a0a0a;
+        border-color: #00ff41;
+        box-shadow: 
+            0 2px 0 #0a0a0a,
+            0 4px 0 #0a0a0a,
+            0 6px 0 #0a0a0a;
+        transform: translateY(-4px);
+        text-shadow: none;
+    }
+    .pushable:active .front {
+        box-shadow: 
+            0 0px 0 #0a0a0a,
+            0 0px 0 #0a0a0a,
+            0 0px 0 #0a0a0a;
+        transform: translateY(0px);
+    }
+    .pushable:disabled .front {
+        opacity: 0.3;
+        box-shadow: 
+            0 2px 0 #0a0a0a,
+            0 4px 0 #0a0a0a;
+        transform: translateY(-4px);
+        cursor: not-allowed;
     }
     
-    /* Menu */
+    /* ===== SECONDARY BUTTON ===== */
+    .pushable-secondary {
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        outline-offset: 4px;
+        outline: none;
+        width: 100%;
+    }
+    .pushable-secondary .front-secondary {
+        display: block;
+        padding: 0.6rem 1.5rem;
+        border-radius: 0px;
+        font-size: 0.7rem;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        background: transparent;
+        color: #555555;
+        transform: translateY(-4px);
+        border: 1px solid #1a1a1a;
+        transition: all 0.1s ease;
+        box-shadow: 
+            0 2px 0 #0a0a0a,
+            0 4px 0 #0a0a0a;
+    }
+    .pushable-secondary:hover .front-secondary {
+        color: #00ff41;
+        border-color: #2a2a2a;
+        box-shadow: 
+            0 1px 0 #0a0a0a,
+            0 2px 0 #0a0a0a;
+        transform: translateY(-2px);
+    }
+    .pushable-secondary:active .front-secondary {
+        box-shadow: 
+            0 0px 0 #0a0a0a,
+            0 0px 0 #0a0a0a;
+        transform: translateY(0px);
+    }
+    
+    /* ===== TERMINAL STYLE ===== */
+    .terminal {
+        background: #0a0a0a;
+        border: 1px solid #1a1a1a;
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    /* ===== MENU ===== */
     .menu-item {
         padding: 0.4rem 0;
-        border-bottom: 1px solid #1a1a1a;
+        border-bottom: 1px solid #111111;
         font-size: 0.75rem;
-        color: #cccccc;
+        color: #aaaaaa;
         font-weight: 300;
+        transition: all 0.3s;
     }
     .menu-item:hover {
         color: #00ff41;
         border-bottom: 1px solid #00ff41;
-        transition: all 0.3s;
+        padding-left: 0.5rem;
     }
     .menu-price {
         float: right;
@@ -93,9 +185,9 @@ st.markdown("""
         font-weight: 300;
     }
     
-    /* Total Card */
+    /* ===== TOTAL CARD ===== */
     .total-card {
-        background: #0d0d0d;
+        background: #0a0a0a;
         border: 1px solid #00ff41;
         padding: 2rem;
         text-align: center;
@@ -118,7 +210,7 @@ st.markdown("""
         100% { left: 100%; }
     }
     .total-card p {
-        color: #666666;
+        color: #555555;
         font-size: 0.7rem;
         font-weight: 300;
         letter-spacing: 3px;
@@ -134,110 +226,46 @@ st.markdown("""
         text-shadow: 0 0 30px rgba(0, 255, 65, 0.05);
     }
     .total-card .sub {
-        color: #666666;
+        color: #555555;
         font-size: 0.7rem;
         font-weight: 300;
         letter-spacing: 1px;
     }
     
-    /* 3D Button */
-    .stButton button {
-        background: #1a1a1a;
-        color: #00ff41;
-        border: 1px solid #2a2a2a;
-        border-radius: 0px;
-        padding: 0.7rem 2rem;
-        font-size: 0.8rem;
-        font-weight: 300;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        width: 100%;
-        position: relative;
-        transition: all 0.1s ease;
-        box-shadow: 
-            0 4px 0 #0a0a0a,
-            0 8px 0 #0a0a0a,
-            0 12px 0 #0a0a0a;
-        transform: translateY(-8px);
-        cursor: pointer;
-        text-shadow: 0 0 10px rgba(0, 255, 65, 0.1);
-    }
-    .stButton button:hover {
-        background: #00ff41;
-        color: #0d0d0d;
-        border-color: #00ff41;
-        box-shadow: 
-            0 2px 0 #0a0a0a,
-            0 4px 0 #0a0a0a,
-            0 6px 0 #0a0a0a;
-        transform: translateY(-4px);
-        text-shadow: none;
-    }
-    .stButton button:active {
-        box-shadow: 
-            0 0px 0 #0a0a0a,
-            0 0px 0 #0a0a0a,
-            0 0px 0 #0a0a0a;
-        transform: translateY(0px);
-    }
-    .stButton button:disabled {
-        opacity: 0.3;
-        box-shadow: 
-            0 2px 0 #0a0a0a,
-            0 4px 0 #0a0a0a;
-        transform: translateY(-4px);
-        cursor: not-allowed;
-    }
-    
-    /* Secondary button */
-    .stButton button[kind="secondary"] {
-        background: transparent;
-        color: #666666;
-        border: 1px solid #2a2a2a;
-        box-shadow: 
-            0 2px 0 #0a0a0a,
-            0 4px 0 #0a0a0a;
-        transform: translateY(-4px);
-    }
-    .stButton button[kind="secondary"]:hover {
-        background: #1a1a1a;
-        color: #00ff41;
-        border-color: #00ff41;
-    }
-    
-    /* Expander */
+    /* ===== EXPANDER ===== */
     .streamlit-expanderHeader {
         font-family: 'JetBrains Mono', monospace !important;
-        background: #1a1a1a !important;
-        border: 1px solid #2a2a2a !important;
+        background: #111111 !important;
+        border: 1px solid #1a1a1a !important;
         border-radius: 0px !important;
-        color: #cccccc !important;
-        font-size: 0.8rem !important;
+        color: #aaaaaa !important;
+        font-size: 0.75rem !important;
         font-weight: 300 !important;
-        letter-spacing: 1px !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
     }
     .streamlit-expanderHeader:hover {
         border-color: #00ff41 !important;
         color: #00ff41 !important;
     }
     .streamlit-expanderContent {
-        background: #0d0d0d !important;
+        background: #0a0a0a !important;
         border: 1px solid #1a1a1a !important;
         border-top: none !important;
         border-radius: 0px !important;
         padding: 1rem !important;
     }
     
-    /* Metrics */
+    /* ===== METRICS ===== */
     .stMetric {
-        background: #1a1a1a !important;
-        border: 1px solid #2a2a2a !important;
+        background: #111111 !important;
+        border: 1px solid #1a1a1a !important;
         border-radius: 0px !important;
         padding: 1rem !important;
     }
     .stMetric label {
-        color: #666666 !important;
-        font-size: 0.65rem !important;
+        color: #555555 !important;
+        font-size: 0.6rem !important;
         font-weight: 300 !important;
         letter-spacing: 2px !important;
         text-transform: uppercase !important;
@@ -248,38 +276,43 @@ st.markdown("""
         font-weight: 300 !important;
     }
     
-    /* Image caption */
+    /* ===== IMAGE ===== */
     .stImage figcaption {
-        color: #666666 !important;
-        font-size: 0.7rem !important;
+        color: #555555 !important;
+        font-size: 0.65rem !important;
         font-weight: 300 !important;
         letter-spacing: 1px !important;
         text-align: center !important;
     }
     
-    /* File uploader */
+    /* ===== FILE UPLOADER ===== */
     .stFileUploader {
-        background: #1a1a1a !important;
-        border: 1px dashed #2a2a2a !important;
+        background: #111111 !important;
+        border: 1px dashed #1a1a1a !important;
         border-radius: 0px !important;
         padding: 1rem !important;
     }
     .stFileUploader:hover {
         border-color: #00ff41 !important;
     }
+    .stFileUploader label {
+        color: #555555 !important;
+        font-weight: 300 !important;
+        letter-spacing: 1px !important;
+    }
     
-    /* Info, warning, success, error */
+    /* ===== ALERTS ===== */
     .stAlert {
         border-radius: 0px !important;
-        background: #1a1a1a !important;
+        background: #111111 !important;
         border-left: 3px solid #00ff41 !important;
-        color: #cccccc !important;
+        color: #aaaaaa !important;
         font-weight: 300 !important;
+        font-size: 0.75rem !important;
     }
     .stAlert svg {
         fill: #00ff41 !important;
     }
-    
     .stAlert.warning {
         border-left-color: #ff6b35 !important;
     }
@@ -290,26 +323,10 @@ st.markdown("""
         border-left-color: #00e676 !important;
     }
     
-    /* Footer */
-    .footer {
-        text-align: center;
-        padding: 2rem 0 1rem 0;
-        color: #2a2a2a;
-        font-size: 0.65rem;
-        border-top: 1px solid #1a1a1a;
-        margin-top: 2rem;
-        letter-spacing: 2px;
-    }
-    
-    /* Spinner */
-    .stSpinner {
-        border-color: #00ff41 !important;
-    }
-    
-    /* Badge */
+    /* ===== BADGE ===== */
     .badge-high {
         color: #00e676;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 300;
         letter-spacing: 1px;
         border: 1px solid #00e676;
@@ -318,7 +335,7 @@ st.markdown("""
     }
     .badge-medium {
         color: #ffab00;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 300;
         letter-spacing: 1px;
         border: 1px solid #ffab00;
@@ -327,7 +344,7 @@ st.markdown("""
     }
     .badge-low {
         color: #ff1744;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 300;
         letter-spacing: 1px;
         border: 1px solid #ff1744;
@@ -335,12 +352,12 @@ st.markdown("""
         display: inline-block;
     }
     
-    /* Sidebar */
+    /* ===== SIDEBAR ===== */
     .css-1d391kg {
-        background-color: #0d0d0d !important;
+        background-color: #0a0a0a !important;
     }
     .css-1d391kg .stMarkdown {
-        color: #cccccc !important;
+        color: #aaaaaa !important;
     }
     .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
         color: #00ff41 !important;
@@ -348,11 +365,39 @@ st.markdown("""
         letter-spacing: 2px !important;
     }
     
-    /* Divider */
+    /* ===== DIVIDER ===== */
     hr {
         border: none;
         border-top: 1px solid #1a1a1a;
         margin: 1.5rem 0;
+    }
+    
+    /* ===== FOOTER ===== */
+    .footer {
+        text-align: center;
+        padding: 2rem 0 1rem 0;
+        color: #1a1a1a;
+        font-size: 0.6rem;
+        border-top: 1px solid #111111;
+        margin-top: 2rem;
+        letter-spacing: 2px;
+    }
+    
+    /* ===== SPINNER ===== */
+    .stSpinner {
+        border-color: #00ff41 !important;
+    }
+    
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar {
+        width: 4px;
+        background: #0a0a0a;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #1a1a1a;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #00ff41;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -390,6 +435,16 @@ def load_model():
             return None
     
     return None
+
+
+def render_pushable_button(label, key, disabled=False):
+    """Render pushable 3D button"""
+    disabled_attr = "disabled" if disabled else ""
+    return f"""
+    <button class="pushable" id="{key}" {disabled_attr}>
+        <span class="front">{label}</span>
+    </button>
+    """
 
 
 st.markdown("""
@@ -449,7 +504,8 @@ with col_left:
         image = load_image(uploaded_file)
         st.image(image, caption="INPUT", use_column_width=True)
         
-        if st.button("Recognize", type="primary", use_container_width=True):
+        # ===== PUSHABLE BUTTON =====
+        if st.button("RECOGNIZE", type="primary", use_container_width=True):
             with st.spinner("Processing..."):
                 session = load_model()
                 
@@ -582,6 +638,7 @@ with col_right:
         else:
             st.warning("No trays detected")
         
+        # ===== RESET BUTTON (secondary) =====
         if st.button("RESET", use_container_width=True):
             st.session_state.clear()
             st.rerun()
