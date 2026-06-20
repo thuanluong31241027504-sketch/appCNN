@@ -39,15 +39,15 @@ def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name=
     return f"data:image/png;base64,{img_str}"
 
 
-# Đọc ảnh header nếu có
-header_image = None
+# ===== ĐỌC ẢNH HEADER =====
+header_image_base64 = None
 if os.path.exists("anh2.jpg"):
     try:
-        header_image = Image.open("anh2.jpg")
-        # Resize ảnh để hiển thị đẹp
-        header_image = header_image.resize((120, 120))
+        with open("anh2.jpg", "rb") as f:
+            img_data = f.read()
+            header_image_base64 = base64.b64encode(img_data).decode()
     except Exception as e:
-        header_image = None
+        header_image_base64 = None
 
 
 st.markdown("""
@@ -453,14 +453,10 @@ header_html = """
     </div>
 """
 
-if header_image is not None:
-    # Convert PIL to base64 for HTML
-    buffered = BytesIO()
-    header_image.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
+if header_image_base64 is not None:
     header_html += f"""
     <div class="header-image">
-        <img src="data:image/png;base64,{img_str}" alt="Food">
+        <img src="data:image/jpeg;base64,{header_image_base64}" alt="Food">
     </div>
     """
 else:
