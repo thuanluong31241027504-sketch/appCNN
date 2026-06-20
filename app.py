@@ -4,6 +4,7 @@ import cv2
 import os
 import sys
 import onnxruntime as ort
+from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -20,91 +21,105 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+    
+    * {
+        font-family: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    }
+    
+    .main {
+        background: #f7f7f7;
+    }
+    
     .header {
         background: #ffffff;
         padding: 1.5rem 2rem;
-        border: 1px solid #000000;
+        border: 1px solid #1a1a1a;
         margin-bottom: 2rem;
         text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .header h1 {
-        font-size: 1.6rem;
+        font-size: 1.4rem;
         font-weight: 300;
-        letter-spacing: 4px;
-        color: #000000;
+        letter-spacing: 6px;
+        color: #1a1a1a;
         margin: 0;
+        text-transform: uppercase;
     }
     .header p {
-        font-size: 0.75rem;
-        color: #666666;
-        margin: 0.3rem 0 0 0;
-        font-weight: 300;
-        letter-spacing: 2px;
-    }
-    
-    .menu-item {
-        padding: 0.3rem 0;
-        border-bottom: 1px solid #e0e0e0;
-        font-size: 0.7rem;
-        color: #333333;
-        font-weight: 300;
-    }
-    .menu-item:hover {
-        border-bottom: 1px solid #000000;
-        padding-left: 0.5rem;
-        transition: all 0.3s;
-    }
-    .menu-price {
-        float: right;
-        color: #000000;
-        font-weight: 400;
-    }
-    
-    .total-card {
-        background: #ffffff;
-        border: 1px solid #000000;
-        padding: 1.5rem;
-        text-align: center;
-        margin: 1rem 0;
-    }
-    .total-card .label {
-        color: #666666;
-        font-size: 0.6rem;
+        font-size: 0.65rem;
+        color: #888888;
+        margin: 0.4rem 0 0 0;
         font-weight: 300;
         letter-spacing: 3px;
         text-transform: uppercase;
     }
-    .total-card .amount {
+    
+    .sidebar-title {
+        font-size: 0.7rem;
+        font-weight: 400;
+        letter-spacing: 4px;
+        color: #1a1a1a;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+    
+    .menu-item {
+        padding: 0.3rem 0;
+        border-bottom: 1px solid #eeeeee;
+        font-size: 0.65rem;
+        color: #333333;
+        font-weight: 300;
+        transition: all 0.2s;
+    }
+    .menu-item:hover {
+        border-bottom: 1px solid #1a1a1a;
+        padding-left: 0.5rem;
         color: #000000;
+    }
+    .menu-price {
+        float: right;
+        color: #1a1a1a;
+        font-weight: 400;
+    }
+    .menu-category {
+        font-size: 0.55rem;
+        color: #999999;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0.8rem 0 0.2rem 0;
+        border-bottom: 1px solid #eeeeee;
+        padding-bottom: 0.2rem;
+    }
+    
+    .total-card {
+        background: #ffffff;
+        border: 1px solid #1a1a1a;
+        padding: 1.5rem;
+        text-align: center;
+        margin: 1rem 0;
+        transition: all 0.3s;
+    }
+    .total-card .label {
+        color: #999999;
+        font-size: 0.5rem;
+        font-weight: 300;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+    }
+    .total-card .amount {
+        color: #1a1a1a;
         font-size: 2.2rem;
         font-weight: 300;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         margin: 0.3rem 0;
     }
     .total-card .summary {
-        color: #666666;
-        font-size: 0.6rem;
+        color: #999999;
+        font-size: 0.55rem;
         font-weight: 300;
-        letter-spacing: 1px;
-    }
-    
-    .invoice-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.4rem 0;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 0.7rem;
-        color: #333333;
-    }
-    .invoice-total {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.6rem 0;
-        border-top: 2px solid #000000;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #000000;
-        margin-top: 0.5rem;
+        letter-spacing: 2px;
     }
     
     .summary-grid {
@@ -114,60 +129,105 @@ st.markdown("""
         margin: 0.8rem 0;
     }
     .summary-item {
-        border: 1px solid #000000;
+        border: 1px solid #1a1a1a;
         padding: 0.8rem;
         text-align: center;
         background: #ffffff;
     }
     .summary-item .value {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 300;
-        color: #000000;
+        color: #1a1a1a;
     }
     .summary-item .desc {
-        font-size: 0.5rem;
-        color: #666666;
+        font-size: 0.45rem;
+        color: #999999;
         font-weight: 300;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         text-transform: uppercase;
         margin-top: 0.2rem;
     }
     
+    .invoice-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.65rem;
+        color: #333333;
+    }
+    .invoice-row:hover {
+        background: #fafafa;
+    }
+    .invoice-total {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.6rem 0;
+        border-top: 2px solid #1a1a1a;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #1a1a1a;
+        margin-top: 0.5rem;
+    }
+    
     .stButton button {
         background: #ffffff;
-        color: #000000;
-        border: 1px solid #000000;
+        color: #1a1a1a;
+        border: 1px solid #1a1a1a;
         border-radius: 0px;
         padding: 0.6rem 2rem;
-        font-size: 0.75rem;
+        font-size: 0.65rem;
         font-weight: 300;
-        letter-spacing: 2px;
+        letter-spacing: 4px;
         text-transform: uppercase;
         width: 100%;
-        transition: all 0.3s;
+        transition: all 0.2s ease;
     }
     .stButton button:hover {
-        background: #000000;
+        background: #1a1a1a;
         color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .stButton button:active {
+        transform: translateY(0px);
+    }
+    
+    .stFileUploader {
+        background: #ffffff !important;
+        border: 1px dashed #cccccc !important;
+        border-radius: 0px !important;
+        padding: 0.8rem !important;
+        transition: all 0.3s;
+    }
+    .stFileUploader:hover {
+        border-color: #1a1a1a !important;
+        border-style: solid !important;
+    }
+    .stFileUploader label {
+        color: #999999 !important;
+        font-weight: 300 !important;
+        letter-spacing: 2px !important;
+        font-size: 0.65rem !important;
     }
     
     .streamlit-expanderHeader {
         background: #ffffff !important;
-        border: 1px solid #000000 !important;
+        border: 1px solid #1a1a1a !important;
         border-radius: 0px !important;
-        color: #000000 !important;
-        font-size: 0.7rem !important;
+        color: #1a1a1a !important;
+        font-size: 0.65rem !important;
         font-weight: 300 !important;
-        letter-spacing: 2px !important;
+        letter-spacing: 3px !important;
         text-transform: uppercase !important;
+        transition: all 0.2s;
     }
     .streamlit-expanderHeader:hover {
-        background: #000000 !important;
-        color: #ffffff !important;
+        background: #f7f7f7 !important;
     }
     .streamlit-expanderContent {
         background: #ffffff !important;
-        border: 1px solid #000000 !important;
+        border: 1px solid #1a1a1a !important;
         border-top: none !important;
         border-radius: 0px !important;
         padding: 1rem !important;
@@ -175,89 +235,166 @@ st.markdown("""
     
     .stAlert {
         border-radius: 0px !important;
-        background: #f5f5f5 !important;
-        border-left: 3px solid #000000 !important;
+        background: #f7f7f7 !important;
+        border-left: 3px solid #1a1a1a !important;
         color: #333333 !important;
         font-weight: 300 !important;
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
+    }
+    .stAlert.success {
+        border-left-color: #1a1a1a !important;
     }
     
     .badge-high {
-        color: #000000;
-        font-size: 0.55rem;
+        color: #1a1a1a;
+        font-size: 0.5rem;
         font-weight: 400;
-        letter-spacing: 1px;
-        border: 1px solid #000000;
+        letter-spacing: 2px;
+        border: 1px solid #1a1a1a;
         padding: 0.1rem 0.6rem;
         display: inline-block;
     }
     .badge-medium {
-        color: #666666;
-        font-size: 0.55rem;
+        color: #888888;
+        font-size: 0.5rem;
         font-weight: 400;
-        letter-spacing: 1px;
-        border: 1px solid #666666;
+        letter-spacing: 2px;
+        border: 1px solid #888888;
         padding: 0.1rem 0.6rem;
         display: inline-block;
     }
     .badge-low {
-        color: #999999;
-        font-size: 0.55rem;
+        color: #cccccc;
+        font-size: 0.5rem;
         font-weight: 400;
-        letter-spacing: 1px;
-        border: 1px solid #999999;
+        letter-spacing: 2px;
+        border: 1px solid #cccccc;
         padding: 0.1rem 0.6rem;
         display: inline-block;
     }
     
     .stImage figcaption {
-        color: #666666 !important;
-        font-size: 0.55rem !important;
+        color: #999999 !important;
+        font-size: 0.5rem !important;
         font-weight: 300 !important;
-        letter-spacing: 1px !important;
+        letter-spacing: 2px !important;
         text-align: center !important;
-    }
-    
-    .stFileUploader {
-        background: #ffffff !important;
-        border: 1px dashed #000000 !important;
-        border-radius: 0px !important;
-        padding: 0.8rem !important;
-    }
-    .stFileUploader:hover {
-        border-style: solid !important;
+        text-transform: uppercase !important;
     }
     
     .footer {
         text-align: center;
         padding: 1.5rem 0 0.5rem 0;
-        color: #cccccc;
-        font-size: 0.55rem;
-        border-top: 1px solid #000000;
+        color: #dddddd;
+        font-size: 0.5rem;
+        border-top: 1px solid #eeeeee;
         margin-top: 1.5rem;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
+    }
+    
+    .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    .status-dot.green {
+        background: #1a1a1a;
+    }
+    .status-dot.red {
+        background: #cccccc;
+    }
+    
+    .model-info {
+        font-size: 0.55rem;
+        color: #888888;
+        letter-spacing: 1px;
+        padding: 0.3rem 0;
     }
     
     .extra-input {
         margin: 0.5rem 0;
         padding: 0.5rem;
-        border: 1px solid #000000;
+        border: 1px solid #eeeeee;
         background: #fafafa;
+    }
+    .extra-input label {
+        font-size: 0.55rem;
+        color: #666666;
+        letter-spacing: 1px;
+    }
+    
+    .tray-title {
+        font-size: 0.6rem;
+        font-weight: 400;
+        letter-spacing: 3px;
+        color: #1a1a1a;
+        text-transform: uppercase;
+    }
+    
+    .prediction-item {
+        padding: 0.2rem 0;
+    }
+    .prediction-item .main {
+        font-weight: 400;
+        font-size: 0.8rem;
+    }
+    .prediction-item .sub {
+        font-size: 0.55rem;
+        color: #888888;
+        font-weight: 300;
+    }
+    
+    ::-webkit-scrollbar {
+        width: 4px;
+        background: #f7f7f7;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #1a1a1a;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #333333;
+    }
+    
+    .css-1d391kg {
+        background-color: #ffffff !important;
+        border-right: 1px solid #eeeeee !important;
+    }
+    .css-1d391kg .stMarkdown {
+        color: #333333 !important;
+    }
+    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
+        color: #1a1a1a !important;
+        font-weight: 300 !important;
+        letter-spacing: 3px !important;
+        font-size: 0.7rem !important;
+        text-transform: uppercase !important;
+    }
+    
+    hr {
+        border: none;
+        border-top: 1px solid #eeeeee;
+        margin: 1rem 0;
+    }
+    
+    .stNumberInput input {
+        border: 1px solid #eeeeee !important;
+        border-radius: 0px !important;
+        font-size: 0.6rem !important;
+        font-family: 'JetBrains Mono', monospace !important;
+    }
+    .stNumberInput input:focus {
+        border-color: #1a1a1a !important;
+        box-shadow: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 
 def check_model_files():
-    """Kiểm tra file model - CẬP NHẬT TÊN FILE MỚI"""
     model_files = []
-    
-    # Thêm tên file mới vào danh sách
-    possible_names = [
-        'food_model.onnx',      # Tên file mới
-        'model.onnx',           # Tên cũ
-        'trainaicuoiky1.onnx'   # Tên cũ
-    ]
+    possible_names = ['food_model.onnx', 'model.onnx', 'trainaicuoiky1.onnx']
     
     for name in possible_names:
         if os.path.exists(name):
@@ -277,7 +414,6 @@ def load_model():
     if not model_files:
         return None
     
-    # Ưu tiên file food_model.onnx
     onnx_files = [f for f in model_files if f['name'] == 'food_model.onnx']
     if not onnx_files:
         onnx_files = [f for f in model_files if f['name'].endswith('.onnx')]
@@ -293,16 +429,21 @@ def load_model():
     return None
 
 
+def render_status_dot(ready):
+    color = "green" if ready else "red"
+    return f'<span class="status-dot {color}"></span>'
+
+
 st.markdown("""
 <div class="header">
     <h1>FOOD DETECTION SYSTEM</h1>
-    <p>AUTOMATED MEAL RECOGNITION &amp; BILLING</p>
+    <p>Automated Meal Recognition · Intelligent Billing</p>
 </div>
 """, unsafe_allow_html=True)
 
 
 with st.sidebar:
-    st.markdown("### MENU")
+    st.markdown('<div class="sidebar-title">Menu</div>', unsafe_allow_html=True)
     st.markdown("---")
     
     categories = {}
@@ -313,7 +454,7 @@ with st.sidebar:
         categories[cat].append(item)
     
     for cat, items in categories.items():
-        st.markdown(f"**{cat.upper()}**")
+        st.markdown(f'<div class="menu-category">{cat}</div>', unsafe_allow_html=True)
         for item in items:
             note = f" ({item['note']})" if item.get('note') else ""
             st.markdown(
@@ -325,38 +466,43 @@ with st.sidebar:
     st.markdown("---")
     
     model_files = check_model_files()
-    if model_files:
-        st.success("MODEL READY")
+    model_ready = len(model_files) > 0
+    
+    status_html = render_status_dot(model_ready)
+    if model_ready:
+        st.markdown(f'{status_html} **MODEL READY**', unsafe_allow_html=True)
         for mf in model_files:
-            st.caption(f"{mf['name']} ({mf['size']:.1f} MB)")
+            st.markdown(f'<div class="model-info">▸ {mf["name"]} ({mf["size"]:.1f} MB)</div>', unsafe_allow_html=True)
     else:
-        st.error("MODEL NOT FOUND")
-        st.info("Upload food_model.onnx to root folder")
+        st.markdown(f'{status_html} **MODEL NOT FOUND**', unsafe_allow_html=True)
+        st.markdown('<div class="model-info">Upload food_model.onnx</div>', unsafe_allow_html=True)
     
     st.markdown("---")
-    st.caption("10 food classes")
+    st.markdown(f'<div class="model-info">{datetime.now().strftime("%Y-%m-%d %H:%M")}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="model-info">10 food classes</div>', unsafe_allow_html=True)
 
 
 col_left, col_right = st.columns([2.5, 1.5])
 
 with col_left:
-    st.markdown("### UPLOAD IMAGE")
+    st.markdown("### Upload")
+    st.markdown("---")
     
     uploaded_file = st.file_uploader(
-        "Select image",
+        "Select an image",
         type=['jpg', 'jpeg', 'png']
     )
     
     if uploaded_file is not None:
         image = load_image(uploaded_file)
-        st.image(image, caption="INPUT", use_column_width=True)
+        st.image(image, caption="Input Image", use_column_width=True)
         
-        if st.button("RECOGNIZE", type="primary", use_container_width=True):
+        if st.button("Recognize", use_container_width=True):
             with st.spinner("Processing..."):
                 session = load_model()
                 
                 if session is None:
-                    st.error("Model not found! Please upload food_model.onnx")
+                    st.error("Model not found")
                 else:
                     st.session_state['image'] = image
                     st.session_state['session'] = session
@@ -365,7 +511,8 @@ with col_left:
 
 
 with col_right:
-    st.markdown("### RESULTS")
+    st.markdown("### Results")
+    st.markdown("---")
     
     if 'processed' in st.session_state and st.session_state['processed']:
         image = st.session_state['image']
@@ -376,9 +523,9 @@ with col_right:
         
         if cropped_results:
             img_with_boxes = draw_boxes_fixed(img_resized, cropped_results)
-            st.image(img_with_boxes, caption="DETECTED", use_column_width=True)
+            st.image(img_with_boxes, caption="Detected Trays", use_column_width=True)
             
-            st.success(f"{len(cropped_results)} trays detected")
+            st.success(f"{len(cropped_results)} tray(s) detected")
             
             detected_foods = []
             food_details = []
@@ -394,7 +541,7 @@ with col_right:
                     with col_img:
                         try:
                             h, w = cropped_img.shape[:2]
-                            scale = min(160 / h, 160 / w)
+                            scale = min(150 / h, 150 / w)
                             new_h, new_w = int(h * scale), int(w * scale)
                             img_display = cv2.resize(cropped_img, (new_w, new_h))
                             st.image(img_display, use_column_width=True)
@@ -414,25 +561,25 @@ with col_right:
                             top3_idx = np.argsort(predictions)[-3:][::-1]
                             top3_conf = predictions[top3_idx]
                             
-                            st.caption("PREDICTIONS:")
+                            st.markdown('<div style="font-size:0.5rem;color:#999;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.3rem;">Predictions</div>', unsafe_allow_html=True)
+                            
                             for i, (fid, conf) in enumerate(zip(top3_idx, top3_conf)):
                                 name = get_food_name(fid)
                                 price = get_food_price(fid)
                                 if i == 0:
-                                    st.markdown(f"**{name}**  {conf*100:.1f}%")
-                                    st.caption(f"Price: {price:,} VND")
+                                    st.markdown(f'<div class="prediction-item"><span class="main">▶ {name}</span> <span style="font-size:0.6rem;color:#888;">{conf*100:.1f}%</span><br><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
                                     detected_foods.append(fid)
                                     
-                                    # Kiểm tra có extra option không
                                     if has_extra_option(fid):
                                         extra_key = len(detected_foods) - 1
                                         egg_count = st.number_input(
-                                            "So luong trung them",
+                                            "Extra eggs",
                                             min_value=0,
                                             max_value=10,
                                             value=0,
                                             step=1,
-                                            key=f"egg_{khay_id}"
+                                            key=f"egg_{khay_id}",
+                                            help="Add extra eggs (+6,000 VND each)"
                                         )
                                         if egg_count > 0:
                                             extras[extra_key] = egg_count
@@ -444,7 +591,7 @@ with col_right:
                                         "confidence": conf
                                     })
                                 else:
-                                    st.text(f"{name}  {conf*100:.1f}%")
+                                    st.markdown(f'<div class="prediction-item"><span style="color:#bbb;">{name}</span> <span style="font-size:0.5rem;color:#ccc;">{conf*100:.1f}%</span></div>', unsafe_allow_html=True)
                             
                             if top3_conf[0] > 0.8:
                                 st.markdown('<span class="badge-high">HIGH</span>', unsafe_allow_html=True)
@@ -458,6 +605,8 @@ with col_right:
             
             if detected_foods:
                 total_price, details = calculate_total(detected_foods, extras)
+                
+                st.markdown("---")
                 
                 st.markdown("""
                 <div class="summary-grid">
@@ -480,12 +629,12 @@ with col_right:
                     total_price
                 ), unsafe_allow_html=True)
                 
-                with st.expander("INVOICE DETAILS", expanded=True):
+                with st.expander("Invoice Details", expanded=True):
                     for i, detail in enumerate(details):
                         extra_text = detail.get('extra_text', '')
                         st.markdown(
                             f"<div class='invoice-row'>"
-                            f"<span>TRAY {i+1}</span>"
+                            f"<span>#{i+1}</span>"
                             f"<span>{detail['name']}{extra_text}</span>"
                             f"<span>{detail['price']:,} VND</span>"
                             f"</div>",
@@ -507,22 +656,23 @@ with col_right:
                     invoice_text += f"{'-'*30}\nTOTAL: {total_price:,} VND"
                     
                     st.download_button(
-                        label="DOWNLOAD INVOICE",
+                        label="Download Invoice",
                         data=invoice_text,
-                        file_name="invoice.txt",
+                        file_name=f"invoice_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
                         mime="text/plain"
                     )
             
         else:
             st.warning("No trays detected")
         
-        if st.button("RESET", use_container_width=True):
+        if st.button("Reset", use_container_width=True):
             st.session_state.clear()
             st.rerun()
     
     else:
-        st.info("Upload image and click RECOGNIZE")
-        st.caption("Automatic segmentation · 10 food classes")
+        st.info("Upload an image and click Recognize")
+        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Automatic segmentation</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Real-time inference</div>', unsafe_allow_html=True)
 
 
 st.markdown("""
