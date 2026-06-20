@@ -8,7 +8,6 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import base64
-from PIL import Image
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -17,7 +16,7 @@ from utils.image_processor import load_image, preprocess_image, crop_food_items,
 
 
 st.set_page_config(
-    page_title="Food Detection System",
+    page_title="Food Image Recognizing",
     page_icon="",
     layout="wide"
 )
@@ -389,8 +388,8 @@ def render_status_dot(ready):
 
 st.markdown("""
 <div class="header">
-    <h1>FOOD DETECTION SYSTEM</h1>
-    <p>Automated Meal Recognition · Intelligent Billing</p>
+    <h1>FOOD IMAGE RECOGNIZING</h1>
+    <p>Smart Detection · Automatic Billing</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -432,7 +431,6 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown(f'<div class="model-info">{datetime.now().strftime("%Y-%m-%d %H:%M")}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="model-info">10 food classes</div>', unsafe_allow_html=True)
 
 
 col_left, col_right = st.columns([2.5, 1.5])
@@ -441,11 +439,9 @@ with col_left:
     st.markdown("### Camera")
     st.markdown("---")
     
-    # Camera input
     camera_image = st.camera_input("Take a photo", key="camera")
     
     if camera_image is not None:
-        # Convert to numpy array
         image = load_image(camera_image)
         st.image(image, caption="Captured Image", use_column_width=True)
         
@@ -462,7 +458,7 @@ with col_left:
                     st.rerun()
     else:
         st.info("Click the camera button above to take a photo")
-        st.markdown('<div class="camera-container"><div class="camera-label">📷 Ready to capture</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="camera-container"><div class="camera-label">Ready to capture</div></div>', unsafe_allow_html=True)
 
 
 with col_right:
@@ -513,38 +509,40 @@ with col_right:
                             result_onnx = session.run([output_name], {input_name: preprocessed})
                             predictions = result_onnx[0][0]
                             
-                            top1_idx = np.argmax(predictions)
-                            top1_conf = predictions[top1_idx]
+                            top3_idx = np.argsort(predictions)[-3:][::-1]
+                            top3_conf = predictions[top3_idx]
                             
-                            fid = top1_idx
-                            name = get_food_name(fid)
-                            price = get_food_price(fid)
+                            st.markdown('<div style="font-size:0.5rem;color:#999;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.3rem;">Predictions</div>', unsafe_allow_html=True)
                             
-                            st.markdown(f'<div class="prediction-item"><span class="main">▶ {name}</span></div>', unsafe_allow_html=True)
-                            st.markdown(f'<div class="prediction-item"><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
-                            
-                            detected_foods.append(fid)
-                            
-                            if has_extra_option(fid):
-                                extra_key = len(detected_foods) - 1
-                                egg_count = st.number_input(
-                                    "Extra eggs",
-                                    min_value=0,
-                                    max_value=10,
-                                    value=0,
-                                    step=1,
-                                    key=f"egg_{khay_id}",
-                                    help="Add extra eggs (+6,000 VND each)"
-                                )
-                                if egg_count > 0:
-                                    extras[extra_key] = egg_count
-                            
-                            food_details.append({
-                                "tray": khay_id,
-                                "name": name,
-                                "price": price,
-                                "confidence": top1_conf
-                            })
+                            for i, (fid, conf) in enumerate(zip(top3_idx, top3_conf)):
+                                name = get_food_name(fid)
+                                price = get_food_price(fid)
+                                if i == 0:
+                                    st.markdown(f'<div class="prediction-item"><span class="main">▸ {name}</span> <span style="font-size:0.6rem;color:#888;">{conf*100:.1f}%</span><br><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
+                                    detected_foods.append(fid)
+                                    
+                                    if has_extra_option(fid):
+                                        extra_key = len(detected_foods) - 1
+                                        egg_count = st.number_input(
+                                            "Extra eggs",
+                                            min_value=0,
+                                            max_value=10,
+                                            value=0,
+                                            step=1,
+                                            key=f"egg_{khay_id}",
+                                            help="Add extra eggs (+6,000 VND each)"
+                                        )
+                                        if egg_count > 0:
+                                            extras[extra_key] = egg_count
+                                    
+                                    food_details.append({
+                                        "tray": khay_id,
+                                        "name": name,
+                                        "price": price,
+                                        "confidence": conf
+                                    })
+                                else:
+                                    st.markdown(f'<div class="prediction-item"><span style="color:#bbb;">{name}</span> <span style="font-size:0.5rem;color:#ccc;">{conf*100:.1f}%</span></div>', unsafe_allow_html=True)
                             
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
@@ -552,7 +550,6 @@ with col_right:
             if detected_foods:
                 total_price, details = calculate_total(detected_foods, extras)
                 
-                # Total card
                 st.markdown("---")
                 st.markdown(f"""
                 <div class="total-card">
@@ -562,7 +559,6 @@ with col_right:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # ===== QR CODE PAYMENT =====
                 st.markdown("### Payment")
                 st.markdown("---")
                 
@@ -576,7 +572,6 @@ with col_right:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Invoice
                 with st.expander("Invoice Details", expanded=False):
                     for i, detail in enumerate(details):
                         extra_text = detail.get('extra_text', '')
@@ -625,6 +620,6 @@ with col_right:
 
 st.markdown("""
 <div class="footer">
-    <p>FOOD DETECTION SYSTEM v2.0 · ONNX RUNTIME · 10 FOOD CLASSES</p>
+    <p>FOOD IMAGE RECOGNIZING · ONNX RUNTIME</p>
 </div>
 """, unsafe_allow_html=True)
