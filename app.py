@@ -45,19 +45,14 @@ def load_model():
     return None
 
 def preprocess_image(image, target_size=(224, 224)):
-    """Tiền xử lý ảnh cho model ONNX - ĐÚNG CHO NHWC (batch, h, w, c)"""
+    """Tiền xử lý ảnh cho model ONNX"""
     if len(image.shape) == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     elif image.shape[2] == 4:
         image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
     
-    # Resize ảnh
     img_resized = cv2.resize(image, target_size)
-    
-    # Chuẩn hóa về [0,1]
     img_normalized = img_resized.astype(np.float32) / 255.0
-    
-    # Thêm batch dimension - KEEP NHWC (batch, height, width, channels)
     img_batch = np.expand_dims(img_normalized, axis=0)
     
     return img_batch
@@ -68,7 +63,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Food Detection System")
+st.title("Food Detection System - Kiem Tra Model")
 st.markdown("---")
 
 with st.sidebar:
@@ -119,7 +114,7 @@ with col1:
 with col2:
     st.subheader("Ket qua nhan dien")
     
-    if 'processed' in st.session_state and st.session_state['processed']:
+    if 'processed' in st.session_state and st_session_state['processed']:
         image = st.session_state['image']
         session = st.session_state['session']
         
@@ -131,15 +126,6 @@ with col2:
             st.image(img_with_boxes, caption="Da cat cac khay", use_column_width=True)
             
             st.success(f"Da cat thanh {len(cropped_results)} khay")
-            
-            # DEBUG: Kiểm tra model
-            with st.expander("🔧 Thong tin model"):
-                st.write("**Input:**")
-                for inp in session.get_inputs():
-                    st.write(f"- {inp.name}: Shape: {inp.shape} - Type: {inp.type}")
-                st.write("**Output:**")
-                for out in session.get_outputs():
-                    st.write(f"- {out.name}: Shape: {out.shape} - Type: {out.type}")
             
             detected_foods = []
             all_predictions = []
@@ -177,10 +163,30 @@ with col2:
                         result_onnx = session.run([output_name], {input_name: preprocessed})
                         predictions = result_onnx[0][0]
                         
-                        # Lưu để kiểm tra
-                        all_predictions.append(predictions)
+                        # ============ KIỂM TRA MODEL ============
                         
-                        # HIỂN THỊ TOP 5
+                        # IN RA TẤT CẢ XÁC SUẤT
+                        st.text("=== TAT CA XAC SUAT ===")
+                        for i, prob in enumerate(predictions):
+                            name = get_food_name(i)
+                            st.text(f"{i}. {name}: {prob:.6f}")
+                        
+                        # KIỂM TRA CÓ PHẢI TẤT CẢ ĐỀU GIỐNG NHAU KHÔNG
+                        unique_vals = np.unique(predictions)
+                        st.text(f"So gia tri khac nhau: {len(unique_vals)}")
+                        
+                        if len(unique_vals) == 1:
+                            st.error("⚠️ MODEL LOI! Tat ca cac class co cung 1 gia tri!")
+                            st.info("Model bi loi, can train lai hoac chuyen doi ONNX lai.")
+                        elif np.all(predictions == predictions[0]):
+                            st.warning("⚠️ Tat ca xac suat bang nhau!")
+                            st.info("Model output khong phan biet duoc cac class.")
+                        else:
+                            st.success("✅ Model co ve binh thuong (cac xac suat khac nhau)")
+                        
+                        # ============ HẾT KIỂM TRA ============
+                        
+                        # TOP 5
                         st.text("=== TOP 5 DU DOAN ===")
                         top5_idx = np.argsort(predictions)[-5:][::-1]
                         top5_conf = predictions[top5_idx]
@@ -211,30 +217,13 @@ with col2:
                             st.error("Tin cay thap")
                         
                         detected_foods.append(food_id)
+                        all_predictions.append(predictions)
                         
                     except Exception as e:
                         st.error(f"Loi: {str(e)}")
                         detected_foods.append(0)
                 
                 st.markdown("---")
-            
-            # KIỂM TRA TẤT CẢ DỰ ĐOÁN CÓ GIỐNG NHAU KHÔNG
-            if all_predictions:
-                with st.expander("🔍 Kiem tra model"):
-                    # Kiểm tra xem tất cả predictions có giống nhau không
-                    first_pred = all_predictions[0]
-                    all_same = all(np.array_equal(pred, first_pred) for pred in all_predictions)
-                    
-                    if all_same:
-                        st.error("⚠️ TAT CA CAC KHAY CHO CUNG KET QUA!")
-                        st.info("Model co the bi loi hoac chua train tot.")
-                    
-                    # Hiển thị phân phối xác suất
-                    st.write("**Phan phoi xac suat trung binh:**")
-                    avg_pred = np.mean(all_predictions, axis=0)
-                    for i, prob in enumerate(avg_pred):
-                        name = get_food_name(i)
-                        st.text(f"{name}: {prob*100:.2f}%")
             
             # TÍNH TỔNG TIỀN
             if detected_foods:
@@ -264,4 +253,4 @@ with col2:
         st.info("Tai anh len va bam 'Nhan dien mon an'")
 
 st.markdown("---")
-st.caption("Food Detection System v1.0")
+st.caption("Food Detection System v1.0 - Kiem tra model")
