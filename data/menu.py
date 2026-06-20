@@ -1,5 +1,5 @@
 # data/menu.py
-# Danh sách món ăn theo thứ tự đúng
+# DANH SÁCH MÓN ĂN - THỨ TỰ CHUẨN
 
 MENU = [
     {"id": 0, "name": "Com trang", "price": 10000, "note": "Mot gia tien nhieu hay it", "category": "Mon chinh"},
@@ -14,11 +14,12 @@ MENU = [
     {"id": 9, "name": "Trung chien", "price": 25000, "note": "Trung chien thit", "category": "Mon chinh"},
 ]
 
-# Map ID cũ -> ID mới (gộp canh chua)
+# MAP ID model -> ID menu (gộp canh chua)
 ID_MAP = {
     5: 5,  # Canh chua co ca -> Canh chua
     6: 5,  # Canh chua khong ca -> Canh chua
 }
+
 
 def get_food_name(food_id):
     """Lấy tên món ăn theo ID"""
@@ -29,6 +30,7 @@ def get_food_name(food_id):
             return item["name"]
     return "Khong xac dinh"
 
+
 def get_food_price(food_id):
     """Lấy giá tiền theo ID"""
     if food_id in ID_MAP:
@@ -37,6 +39,7 @@ def get_food_price(food_id):
         if item["id"] == food_id:
             return item["price"]
     return 0
+
 
 def get_food_category(food_id):
     """Lấy danh mục món ăn"""
@@ -47,6 +50,7 @@ def get_food_category(food_id):
             return item["category"]
     return "Khac"
 
+
 def get_food_note(food_id):
     """Lấy ghi chú món ăn"""
     if food_id in ID_MAP:
@@ -56,8 +60,9 @@ def get_food_note(food_id):
             return item["note"]
     return ""
 
+
 def has_extra_option(food_id):
-    """Kiểm tra món có tùy chọn thêm không (ví dụ: thêm trứng)"""
+    """Kiểm tra món có tùy chọn thêm không (thêm trứng)"""
     if food_id in ID_MAP:
         food_id = ID_MAP[food_id]
     for item in MENU:
@@ -65,8 +70,19 @@ def has_extra_option(food_id):
             return item.get("has_extra", False)
     return False
 
+
 def calculate_total(detected_foods, extras=None):
-    """Tính tổng tiền từ danh sách món ăn đã detect"""
+    """
+    Tính tổng tiền từ danh sách món ăn đã detect
+    
+    Args:
+        detected_foods: list[int] - danh sách ID món ăn từ model
+        extras: dict[int, int] - {index: so_luong_trung} cho món Thit kho trung
+    
+    Returns:
+        total: int - tổng tiền
+        details: list[dict] - chi tiết từng món
+    """
     total = 0
     details = []
     
@@ -78,7 +94,7 @@ def calculate_total(detected_foods, extras=None):
         price = get_food_price(food_id)
         category = get_food_category(food_id)
         
-        # Xử lý extra (thêm trứng)
+        # Xử lý thêm trứng cho Thit kho trung
         extra_text = ""
         if extras and idx in extras:
             egg_count = extras[idx]
@@ -96,15 +112,3 @@ def calculate_total(detected_foods, extras=None):
         })
     
     return total, details
-
-# Kiểm tra nếu chạy trực tiếp
-if __name__ == "__main__":
-    print("=== MENU ===")
-    for item in MENU:
-        print(f"{item['id']}. {item['name']} - {item['price']:,} VND")
-    
-    print("\n=== TEST FUNCTIONS ===")
-    for i in range(10):
-        name = get_food_name(i)
-        price = get_food_price(i)
-        print(f"ID {i}: {name} - {price:,} VND")
