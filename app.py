@@ -45,14 +45,19 @@ def load_model():
     return None
 
 def preprocess_image(image, target_size=(224, 224)):
-    """Tiền xử lý ảnh cho model ONNX"""
+    """Tiền xử lý ảnh cho model ONNX - ĐÚNG CHO NHWC (batch, h, w, c)"""
     if len(image.shape) == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     elif image.shape[2] == 4:
         image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
     
+    # Resize ảnh
     img_resized = cv2.resize(image, target_size)
+    
+    # Chuẩn hóa về [0,1]
     img_normalized = img_resized.astype(np.float32) / 255.0
+    
+    # Thêm batch dimension - KEEP NHWC (batch, height, width, channels)
     img_batch = np.expand_dims(img_normalized, axis=0)
     
     return img_batch
@@ -63,7 +68,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Food Detection System - Debug Model")
+st.title("Food Detection System")
 st.markdown("---")
 
 with st.sidebar:
@@ -128,22 +133,16 @@ with col2:
             st.success(f"Da cat thanh {len(cropped_results)} khay")
             
             # DEBUG: Kiểm tra model
-            with st.expander("🔧 Kiem tra model", expanded=True):
-                st.write("**Thong tin model:**")
+            with st.expander("🔧 Thong tin model"):
+                st.write("**Input:**")
                 for inp in session.get_inputs():
-                    st.write(f"Input: {inp.name} - Shape: {inp.shape} - Type: {inp.type}")
+                    st.write(f"- {inp.name}: Shape: {inp.shape} - Type: {inp.type}")
+                st.write("**Output:**")
                 for out in session.get_outputs():
-                    st.write(f"Output: {out.name} - Shape: {out.shape} - Type: {out.type}")
-                
-                # Test với ảnh mẫu
-                st.write("**Test voi anh mau:**")
-                test_img = np.random.randn(1, 3, 224, 224).astype(np.float32)
-                test_result = session.run([session.get_outputs()[0].name], 
-                                         {session.get_inputs()[0].name: test_img})
-                st.write(f"Output shape: {test_result[0].shape}")
-                st.write(f"Output values: {test_result[0][0][:5]}...")
+                    st.write(f"- {out.name}: Shape: {out.shape} - Type: {out.type}")
             
             detected_foods = []
+            all_predictions = []
             
             for result in cropped_results:
                 cropped_img = result["image"]
@@ -167,27 +166,21 @@ with col2:
                 
                 with col_info:
                     try:
+                        # Tiền xử lý
                         preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
                         
-                        # DEBUG: Hiển thị thông tin ảnh đã tiền xử lý
-                        with st.expander(f"Debug Khay {khay_id}"):
-                            st.write(f"Shape sau preprocessing: {preprocessed.shape}")
-                            st.write(f"Min: {preprocessed.min():.4f}, Max: {preprocessed.max():.4f}")
-                            st.write(f"Mean: {preprocessed.mean():.4f}, Std: {preprocessed.std():.4f}")
-                        
+                        # Lấy tên input/output
                         input_name = session.get_inputs()[0].name
                         output_name = session.get_outputs()[0].name
                         
+                        # Dự đoán
                         result_onnx = session.run([output_name], {input_name: preprocessed})
                         predictions = result_onnx[0][0]
                         
-                        # HIỂN THỊ TẤT CẢ CLASS
-                        st.text("=== TAT CA CLASS ===")
-                        for i, prob in enumerate(predictions):
-                            name = get_food_name(i)
-                            st.text(f"{name}: {prob*100:.2f}%")
+                        # Lưu để kiểm tra
+                        all_predictions.append(predictions)
                         
-                        # TOP 5
+                        # HIỂN THỊ TOP 5
                         st.text("=== TOP 5 DU DOAN ===")
                         top5_idx = np.argsort(predictions)[-5:][::-1]
                         top5_conf = predictions[top5_idx]
@@ -199,22 +192,14 @@ with col2:
                             else:
                                 st.text(f"{i+1}. {name}: {conf*100:.2f}%")
                         
-                        # KIỂM TRA TẤT CẢ CÓ GIỐNG NHAU KHÔNG
-                        unique_vals = np.unique(predictions)
-                        st.text(f"So gia tri khac nhau: {len(unique_vals)}")
-                        if len(unique_vals) == 1:
-                            st.error("⚠️ MODEL BI LOI! Tat ca cac class co cung 1 gia tri!")
-                        elif np.all(predictions == predictions[0]):
-                            st.warning("⚠️ Tat ca cac class co xac suat giong nhau!")
-                        
-                        # Lấy dự đoán
+                        # Lấy dự đoán tốt nhất
                         food_id = top5_idx[0]
                         confidence = top5_conf[0]
                         food_name = get_food_name(food_id)
                         food_price = get_food_price(food_id)
                         
                         st.markdown("---")
-                        st.markdown(f"**Ket qua cuoi cung: {food_name}**")
+                        st.markdown(f"**Ket qua: {food_name}**")
                         st.text(f"Gia: {food_price:,} VND")
                         st.text(f"Do tin cay: {confidence*100:.2f}%")
                         
@@ -232,6 +217,24 @@ with col2:
                         detected_foods.append(0)
                 
                 st.markdown("---")
+            
+            # KIỂM TRA TẤT CẢ DỰ ĐOÁN CÓ GIỐNG NHAU KHÔNG
+            if all_predictions:
+                with st.expander("🔍 Kiem tra model"):
+                    # Kiểm tra xem tất cả predictions có giống nhau không
+                    first_pred = all_predictions[0]
+                    all_same = all(np.array_equal(pred, first_pred) for pred in all_predictions)
+                    
+                    if all_same:
+                        st.error("⚠️ TAT CA CAC KHAY CHO CUNG KET QUA!")
+                        st.info("Model co the bi loi hoac chua train tot.")
+                    
+                    # Hiển thị phân phối xác suất
+                    st.write("**Phan phoi xac suat trung binh:**")
+                    avg_pred = np.mean(all_predictions, axis=0)
+                    for i, prob in enumerate(avg_pred):
+                        name = get_food_name(i)
+                        st.text(f"{name}: {prob*100:.2f}%")
             
             # TÍNH TỔNG TIỀN
             if detected_foods:
@@ -261,4 +264,4 @@ with col2:
         st.info("Tai anh len va bam 'Nhan dien mon an'")
 
 st.markdown("---")
-st.caption("Food Detection System v1.0 - Debug model")
+st.caption("Food Detection System v1.0")
