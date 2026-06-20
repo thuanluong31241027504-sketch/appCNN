@@ -249,8 +249,15 @@ st.markdown("""
 
 
 def check_model_files():
+    """Kiểm tra file model - CẬP NHẬT TÊN FILE MỚI"""
     model_files = []
-    possible_names = ['model.onnx', 'trainaicuoiky1.onnx']
+    
+    # Thêm tên file mới vào danh sách
+    possible_names = [
+        'food_model.onnx',      # Tên file mới
+        'model.onnx',           # Tên cũ
+        'trainaicuoiky1.onnx'   # Tên cũ
+    ]
     
     for name in possible_names:
         if os.path.exists(name):
@@ -270,7 +277,11 @@ def load_model():
     if not model_files:
         return None
     
-    onnx_files = [f for f in model_files if f['name'].endswith('.onnx')]
+    # Ưu tiên file food_model.onnx
+    onnx_files = [f for f in model_files if f['name'] == 'food_model.onnx']
+    if not onnx_files:
+        onnx_files = [f for f in model_files if f['name'].endswith('.onnx')]
+    
     if onnx_files:
         chosen = onnx_files[0]
         try:
@@ -320,6 +331,7 @@ with st.sidebar:
             st.caption(f"{mf['name']} ({mf['size']:.1f} MB)")
     else:
         st.error("MODEL NOT FOUND")
+        st.info("Upload food_model.onnx to root folder")
     
     st.markdown("---")
     st.caption("10 food classes")
@@ -344,7 +356,7 @@ with col_left:
                 session = load_model()
                 
                 if session is None:
-                    st.error("Model not found")
+                    st.error("Model not found! Please upload food_model.onnx")
                 else:
                     st.session_state['image'] = image
                     st.session_state['session'] = session
