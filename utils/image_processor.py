@@ -21,32 +21,29 @@ def preprocess_image(image, target_size=(224, 224)):
     
     return img_batch
 
-def enhance_image(image):
-    """Tăng cường chất lượng ảnh trước khi xử lý"""
-    # Chuyển sang LAB để cân bằng sáng
-    lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
-    l, a, b = cv2.split(lab)
+def enhance_image_light(image):
+    """Tăng cường chất lượng ảnh NHẸ - KHÔNG LÀM ĐEN"""
+    # Chuyển sang YUV để xử lý riêng kênh sáng
+    yuv = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+    y, u, v = cv2.split(yuv)
     
-    # CLAHE - Tăng cường độ tương phản
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    l_enhanced = clahe.apply(l)
+    # CLAHE nhẹ - tăng contrast vừa phải
+    clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(4, 4))
+    y_enhanced = clahe.apply(y)
     
-    lab_enhanced = cv2.merge((l_enhanced, a, b))
-    enhanced = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2RGB)
+    # Gộp lại và chuyển về RGB
+    yuv_enhanced = cv2.merge((y_enhanced, u, v))
+    enhanced = cv2.cvtColor(yuv_enhanced, cv2.COLOR_YUV2RGB)
     
-    # Làm sắc nét nhẹ
-    kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]]) / 9
-    sharpened = cv2.filter2D(enhanced, -1, kernel)
-    
-    return sharpened
+    return enhanced
 
 def crop_food_items_fixed(image):
-    """Cắt ảnh theo tọa độ cố định với tăng cường chất lượng"""
-    # Resize ảnh về 1400x1300 với interpolation chất lượng cao
+    """Cắt ảnh theo tọa độ cố định"""
+    # Resize ảnh về 1400x1300
     img_resized = cv2.resize(image, (1400, 1300), interpolation=cv2.INTER_LANCZOS4)
     
-    # Tăng cường chất lượng ảnh
-    img_enhanced = enhance_image(img_resized)
+    # Tăng cường NHẸ - không làm đen
+    img_enhanced = enhance_image_light(img_resized)
     
     regions = [
         {"id": 1, "name": "Khay 1", "y1": 0, "y2": 715, "x1": 64, "x2": 687},
