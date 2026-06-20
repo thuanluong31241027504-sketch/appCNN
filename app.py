@@ -10,7 +10,7 @@ import onnxruntime as ort
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from data.menu import MENU, get_food_name, get_food_price, calculate_total
-from utils.image_processor import load_image, preprocess_image, crop_food_items
+from utils.image_processor import load_image, preprocess_image, crop_food_items, draw_boxes_fixed
 
 # ============================================
 # KIỂM TRA MODEL
@@ -53,21 +53,6 @@ def load_model():
     return None
 
 # ============================================
-# HÀM HIỂN THỊ ẢNH CÓ BOUNDING BOX
-# ============================================
-
-def draw_boxes(image, boxes):
-    """Vẽ bounding boxes lên ảnh để debug"""
-    img_copy = image.copy()
-    for box in boxes:
-        x, y, w, h = box["bbox"]
-        cv2.rectangle(img_copy, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        # Thêm số thứ tự
-        cv2.putText(img_copy, str(boxes.index(box) + 1), (x, y-5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-    return img_copy
-
-# ============================================
 # GIAO DIỆN STREAMLIT
 # ============================================
 
@@ -86,6 +71,16 @@ with st.sidebar:
     for item in MENU:
         note = f" ({item['note']})" if item['note'] else ""
         st.text(f"{item['id']}. {item['name']} - {item['price']:,} VND{note}")
+    
+    st.markdown("---")
+    
+    # Thông tin vị trí khay
+    st.header("Vi tri khay")
+    st.text("Khay 1: Goc trai tren")
+    st.text("Khay 2: Goc phai tren")
+    st.text("Khay 3: Goc trai duoi")
+    st.text("Khay 4: Giua duoi")
+    st.text("Khay 5: Goc phai duoi")
     
     st.markdown("---")
     
@@ -112,7 +107,10 @@ with col1:
     )
     
     if uploaded_file is not None:
+        # Đọc ảnh
         image = load_image(uploaded_file)
+        
+        # Hiển thị ảnh gốc
         st.image(image, caption="Anh da tai len", use_column_width=True)
         
         # Nút xử lý
@@ -135,25 +133,26 @@ with col2:
         image = st.session_state['image']
         session = st.session_state['session']
         
-        # CẮT ẢNH
-        with st.spinner("Dang cat anh thanh cac mon..."):
-            cropped_images, boxes = crop_food_items(image)
+        # CẮT ẢNH THEO TỌA ĐỘ CỐ ĐỊNH
+        with st.spinner("Dang cat anh thanh cac khay..."):
+            cropped_results = crop_food_items(image)
         
-        # DEBUG: HIỂN THỊ ẢNH CÓ BOX
-        st.write(f"**Tim thay {len(boxes)} vung anh**")
-        
-        if len(boxes) > 0:
-            # Hiển thị ảnh có bounding boxes
-            img_with_boxes = draw_boxes(image, boxes)
-            st.image(img_with_boxes, caption="Da phat hien cac mon an", use_column_width=True)
+        # Hiển thị ảnh có bounding boxes
+        if cropped_results:
+            img_with_boxes = draw_boxes_fixed(image, cropped_results)
+            st.image(img_with_boxes, caption="Da cat cac khay", use_column_width=True)
             
-            st.success(f"Da phat hien {len(cropped_images)} mon an")
+            st.success(f"Da cat thanh {len(cropped_results)} khay")
             
             detected_foods = []
             
-            # DUYỆT TỪNG ẢNH ĐÃ CẮT
-            for idx, cropped_img in enumerate(cropped_images):
-                st.markdown(f"**Mon {idx + 1}:**")
+            # DUYỆT TỪNG KHAY ĐÃ CẮT
+            for idx, result in enumerate(cropped_results):
+                cropped_img = result["image"]
+                khay_id = result["id"]
+                khay_name = result["name"]
+                
+                st.markdown(f"**{khay_name} (Khay {khay_id}):**")
                 
                 col_img, col_info = st.columns([1, 2])
                 
@@ -161,25 +160,31 @@ with col2:
                     try:
                         # Hiển thị ảnh đã cắt
                         if cropped_img.shape[0] > 0 and cropped_img.shape[1] > 0:
-                            img_display = cv2.resize(cropped_img, (150, 150))
-                            st.image(img_display, use_column_width=True)
+                            # Resize để hiển thị
+                            h, w = cropped_img.shape[:2]
+                            if h > 200 or w > 200:
+                                scale = min(200/h, 200/w)
+                                new_h, new_w = int(h*scale), int(w*scale)
+                                img_display = cv2.resize(cropped_img, (new_w, new_h))
+                                st.image(img_display, use_column_width=True)
+                            else:
+                                st.image(cropped_img, use_column_width=True)
                         else:
                             st.warning("Anh rong")
                     except Exception as e:
                         st.warning(f"Khong the hien thi anh: {str(e)}")
-                        st.image(cropped_img, use_column_width=True)
                 
                 with col_info:
                     try:
                         # Tiền xử lý
                         preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
                         
-                        # Dự đoán
+                        # Dự đoán với ONNX
                         input_name = session.get_inputs()[0].name
                         output_name = session.get_outputs()[0].name
                         
-                        result = session.run([output_name], {input_name: preprocessed})
-                        predictions = result[0]
+                        result_onnx = session.run([output_name], {input_name: preprocessed})
+                        predictions = result_onnx[0]
                         
                         food_id = np.argmax(predictions[0])
                         confidence = np.max(predictions[0])
@@ -211,11 +216,11 @@ with col2:
                 total_price = 0
                 detail_text = []
                 
-                for food_id in detected_foods:
+                for idx, food_id in enumerate(detected_foods):
                     name = get_food_name(food_id)
                     price = get_food_price(food_id)
                     total_price += price
-                    detail_text.append(f"{name}: {price:,} VND")
+                    detail_text.append(f"Khay {idx+1}: {name} - {price:,} VND")
                 
                 st.markdown("### Tong tien")
                 st.markdown(f"**{total_price:,} VND**")
@@ -224,13 +229,8 @@ with col2:
                     for detail in detail_text:
                         st.text(detail)
         else:
-            st.warning("Khong tim thay mon an trong anh")
-            
-            # HIỂN THỊ THÔNG TIN DEBUG
-            with st.expander("Debug: Thong tin anh"):
-                st.write(f"Kich thuoc anh: {image.shape}")
-                st.write(f"So kenh mau: {image.shape[2] if len(image.shape) > 2 else 'Grayscale'}")
-                st.write("Thu nguoi dung anh khac hoac dieu chinh anh sang hon.")
+            st.warning("Khong tim thay khay nao trong anh")
+            st.info("Vui long kiem tra lai anh hoac toa do cat")
         
         if st.button("Lam moi"):
             st.session_state['processed'] = False
