@@ -4,6 +4,7 @@ from PIL import Image
 import cv2
 import os
 import sys
+import tensorflow as tf
 
 # Thêm đường dẫn để import module
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -17,6 +18,31 @@ st.set_page_config(
     page_icon="",
     layout="wide"
 )
+
+# Load model CNN
+@st.cache_resource
+def load_model():
+    """Load model CNN đã train"""
+    # Model ở thư mục gốc
+    model_path = 'trainaicuoiky1.keras'
+    
+    # Kiểm tra các đường dẫn khác nếu không tìm thấy
+    if not os.path.exists(model_path):
+        # Thử tìm trong thư mục model
+        alt_path = 'model/trainaicuoiky1.keras'
+        if os.path.exists(alt_path):
+            model_path = alt_path
+        else:
+            st.error(f"Khong tim thay file model. Da tim tai: {model_path} va {alt_path}")
+            return None
+    
+    try:
+        model = tf.keras.models.load_model(model_path)
+        st.success(f"Da load model thanh cong!")
+        return model
+    except Exception as e:
+        st.error(f"Loi khi load model: {str(e)}")
+        return None
 
 # Tiêu đề chính
 st.title("Food Detection System")
@@ -37,7 +63,13 @@ with st.sidebar:
         st.text(line)
     
     st.markdown("---")
-    st.caption("He thong nhan dien mon an tu anh")
+    
+    # Hiển thị thông tin model
+    if os.path.exists('trainaicuoiky1.keras'):
+        st.success("Model: trainaicuoiky1.keras")
+        st.caption(f"Kich thuoc: {os.path.getsize('trainaicuoiky1.keras') / (1024*1024):.2f} MB")
+    else:
+        st.warning("Chua tim thay file model")
 
 # Main content
 col1, col2 = st.columns([2, 1])
@@ -60,10 +92,16 @@ with col1:
         # Nút xử lý
         if st.button("Nhan dien mon an", type="primary"):
             with st.spinner("Dang xu ly anh..."):
-                # Xử lý ảnh
-                st.session_state['image'] = image
-                st.session_state['processed'] = True
-                st.rerun()
+                # Load model
+                model = load_model()
+                if model is None:
+                    st.error("Khong the load model. Vui long kiem tra file trainaicuoiky1.keras")
+                else:
+                    # Xử lý ảnh
+                    st.session_state['image'] = image
+                    st.session_state['model'] = model
+                    st.session_state['processed'] = True
+                    st.rerun()
 
 with col2:
     st.subheader("Ket qua nhan dien")
@@ -71,6 +109,7 @@ with col2:
     # Kiểm tra trạng thái xử lý
     if 'processed' in st.session_state and st.session_state['processed']:
         image = st.session_state['image']
+        model = st.session_state['model']
         
         # Cắt các món ăn
         cropped_images, boxes = crop_food_items(image)
@@ -95,14 +134,30 @@ with col2:
                         st.image(img_display, use_column_width=True)
                     
                     with col_info:
-                        # TODO: Thay thế bằng dự đoán từ model CNN thực tế
-                        # Hiện tại đang sử dụng dữ liệu mẫu
-                        food_id = idx % len(MENU)  # Tạm thời
+                        # Tiền xử lý cho model
+                        preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
+                        
+                        # Dự đoán
+                        predictions = model.predict(preprocessed)
+                        food_id = np.argmax(predictions[0])
+                        confidence = np.max(predictions[0])
+                        
+                        # Lấy thông tin món ăn
                         food_name = get_food_name(food_id)
                         food_price = get_food_price(food_id)
                         
                         st.text(f"Ten: {food_name}")
                         st.text(f"Gia: {food_price:,} VND")
+                        st.text(f"Do tin cay: {confidence*100:.1f}%")
+                        
+                        # Màu sắc theo độ tin cậy
+                        if confidence > 0.8:
+                            st.success("Tin cay cao")
+                        elif confidence > 0.5:
+                            st.warning("Tin cay trung binh")
+                        else:
+                            st.error("Tin cay thap")
+                        
                         detected_foods.append(food_id)
                     
                     st.markdown("---")
