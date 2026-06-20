@@ -8,6 +8,7 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import base64
+from PIL import Image
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -38,6 +39,17 @@ def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name=
     return f"data:image/png;base64,{img_str}"
 
 
+# Đọc ảnh header nếu có
+header_image = None
+if os.path.exists("anh2.jpg"):
+    try:
+        header_image = Image.open("anh2.jpg")
+        # Resize ảnh để hiển thị đẹp
+        header_image = header_image.resize((120, 120))
+    except Exception as e:
+        header_image = None
+
+
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
@@ -51,9 +63,15 @@ st.markdown("""
         padding: 1.5rem 2rem;
         border: 1px solid #1a1a1a;
         margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+    }
+    .header-content {
         text-align: center;
     }
-    .header h1 {
+    .header-content h1 {
         font-size: 1.4rem;
         font-weight: 300;
         letter-spacing: 6px;
@@ -61,13 +79,30 @@ st.markdown("""
         margin: 0;
         text-transform: uppercase;
     }
-    .header p {
+    .header-content p {
         font-size: 0.6rem;
         color: #888888;
         margin: 0.4rem 0 0 0;
         font-weight: 300;
         letter-spacing: 1px;
         text-transform: none;
+    }
+    .header-image {
+        flex-shrink: 0;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #1a1a1a;
+        width: 120px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f7f7;
+    }
+    .header-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
     
     .sidebar-title {
@@ -409,12 +444,34 @@ def render_status_dot(ready):
     return f'<span class="status-dot {color}"></span>'
 
 
-st.markdown("""
+# ===== HEADER WITH IMAGE =====
+header_html = """
 <div class="header">
-    <h1>FOOD IMAGE RECOGNIZING</h1>
-    <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
-</div>
-""", unsafe_allow_html=True)
+    <div class="header-content">
+        <h1>FOOD IMAGE RECOGNIZING</h1>
+        <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
+    </div>
+"""
+
+if header_image is not None:
+    # Convert PIL to base64 for HTML
+    buffered = BytesIO()
+    header_image.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    header_html += f"""
+    <div class="header-image">
+        <img src="data:image/png;base64,{img_str}" alt="Food">
+    </div>
+    """
+else:
+    header_html += """
+    <div class="header-image">
+        <span style="font-size:0.6rem;color:#cccccc;">No image</span>
+    </div>
+    """
+
+header_html += "</div>"
+st.markdown(header_html, unsafe_allow_html=True)
 
 
 with st.sidebar:
