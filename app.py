@@ -4,7 +4,7 @@ from PIL import Image
 import cv2
 import os
 import sys
-import tensorflow as tf
+import onnxruntime as ort
 
 # Thêm đường dẫn để import module
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -23,49 +23,66 @@ st.set_page_config(
 st.title("Food Detection System")
 st.markdown("---")
 
-# Load model
+# Load model ONNX
 @st.cache_resource
 def load_model():
-    """Load model CNN đã train"""
-    # Tìm file model
-    model_paths = [
-        'trainaicuoiky1.keras',
-        'model/trainaicuoiky1.keras',
-        'trainaicuoiky.keras',
-        'model.keras'
-    ]
+    """Load model ONNX Runtime"""
+    model_paths = ['model.onnx', 'trainaicuoiky1.onnx']
     
     for path in model_paths:
         if os.path.exists(path):
             try:
-                model = tf.keras.models.load_model(path)
-                st.success(f"Da load model thanh cong: {path}")
-                return model
+                session = ort.InferenceSession(path)
+                st.success(f"Da load model ONNX thanh cong: {path}")
+                
+                # Hiển thị thông tin model
+                input_name = session.get_inputs()[0].name
+                output_name = session.get_outputs()[0].name
+                st.info(f"Input: {input_name}, Output: {output_name}")
+                
+                return session
             except Exception as e:
                 st.error(f"Loi load model {path}: {str(e)}")
                 continue
     
     # Nếu không tìm thấy model
-    st.error("Khong tim thay file model (trainaicuoiky1.keras)")
+    st.error("Khong tim thay file model.onnx")
+    st.info("Vui long upload file model.onnx vao thu muc goc")
     return None
+
+def predict(session, image):
+    """Dự đoán với ONNX Runtime"""
+    # Lấy thông tin input/output
+    input_name = session.get_inputs()[0].name
+    output_name = session.get_outputs()[0].name
+    
+    # Chạy inference
+    result = session.run([output_name], {input_name: image})
+    return result[0]
 
 # Sidebar
 with st.sidebar:
     st.header("Menu")
     st.markdown("**Danh sach mon an:**")
     
-    # Hiển thị menu
     for item in MENU:
         note = f" ({item['note']})" if item['note'] else ""
         st.text(f"{item['id']}. {item['name']} - {item['price']:,} VND{note}")
     
     st.markdown("---")
-    st.caption("He thong nhan dien mon an tu anh")
     
     # Thông tin model
-    if os.path.exists('trainaicuoiky1.keras'):
-        size = os.path.getsize('trainaicuoiky1.keras') / (1024*1024)
-        st.success(f"Model: trainaicuoiky1.keras ({size:.1f} MB)")
+    if os.path.exists('model.onnx'):
+        size = os.path.getsize('model.onnx') / (1024*1024)
+        st.success(f"Model ONNX: {size:.1f} MB")
+    elif os.path.exists('trainaicuoiky1.onnx'):
+        size = os.path.getsize('trainaicuoiky1.onnx') / (1024*1024)
+        st.success(f"Model ONNX: {size:.1f} MB")
+    else:
+        st.warning("Chua tim thay file model.onnx")
+        st.info("Upload file .onnx vao thu muc goc")
+    
+    st.caption("He thong nhan dien mon an tu anh")
 
 # Main content
 col1, col2 = st.columns([2, 1])
@@ -87,12 +104,12 @@ with col1:
         # Nút xử lý
         if st.button("Nhan dien mon an", type="primary"):
             with st.spinner("Dang xu ly anh..."):
-                model = load_model()
-                if model is None:
-                    st.error("Khong the load model. Vui long kiem tra file trainaicuoiky1.keras")
+                session = load_model()
+                if session is None:
+                    st.error("Khong the load model. Vui long kiem tra file model.onnx")
                 else:
                     st.session_state['image'] = image
-                    st.session_state['model'] = model
+                    st.session_state['session'] = session
                     st.session_state['processed'] = True
                     st.rerun()
 
@@ -101,7 +118,7 @@ with col2:
     
     if 'processed' in st.session_state and st.session_state['processed']:
         image = st.session_state['image']
-        model = st.session_state['model']
+        session = st.session_state['session']
         
         # Cắt các món ăn
         cropped_images, boxes = crop_food_items(image)
@@ -128,12 +145,12 @@ with col2:
                         # Tiền xử lý
                         preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
                         
-                        # Dự đoán
-                        predictions = model.predict(preprocessed, verbose=0)
+                        # Dự đoán với ONNX
+                        predictions = predict(session, preprocessed)
                         food_id = np.argmax(predictions[0])
                         confidence = np.max(predictions[0])
                         
-                        # Lấy thông tin
+                        # Lấy thông tin món ăn
                         food_name = get_food_name(food_id)
                         food_price = get_food_price(food_id)
                         
@@ -179,4 +196,4 @@ with col2:
 
 # Footer
 st.markdown("---")
-st.caption("Food Detection System v1.0")
+st.caption("Food Detection System v1.0 - ONNX Runtime")
