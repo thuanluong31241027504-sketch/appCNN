@@ -8,7 +8,7 @@ def load_image(image_file):
     return np.array(img)
 
 def preprocess_image(image, target_size=(224, 224)):
-    """Tiền xử lý ảnh cho model CNN"""
+    """Tiền xử lý ảnh cho model ONNX"""
     # Chuyển đổi sang RGB nếu cần
     if len(image.shape) == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
@@ -66,10 +66,6 @@ def detect_food_boxes(image):
 
 def crop_food_items(image):
     """Cắt từng món ăn từ ảnh gốc"""
-    # Phát hiện các khay thức ăn
     boxes = detect_food_boxes(image)
-    
-    # Trả về danh sách ảnh đã cắt
     cropped_images = [box["image"] for box in boxes]
-    
     return cropped_images, boxes
