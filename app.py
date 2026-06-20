@@ -8,6 +8,7 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import base64
+from PIL import Image
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -252,14 +253,6 @@ st.markdown("""
         background: #fafafa;
     }
     
-    .tray-title {
-        font-size: 0.6rem;
-        font-weight: 400;
-        letter-spacing: 3px;
-        color: #1a1a1a;
-        text-transform: uppercase;
-    }
-    
     .prediction-item {
         padding: 0.2rem 0;
     }
@@ -303,6 +296,21 @@ st.markdown("""
         letter-spacing: 2px;
         text-transform: uppercase;
         margin-top: 0.2rem;
+    }
+    
+    .camera-container {
+        border: 1px solid #1a1a1a;
+        padding: 1rem;
+        text-align: center;
+        background: #fafafa;
+        margin: 1rem 0;
+    }
+    .camera-container .camera-label {
+        font-size: 0.55rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
     }
     
     ::-webkit-scrollbar {
@@ -430,30 +438,17 @@ with st.sidebar:
 col_left, col_right = st.columns([2.5, 1.5])
 
 with col_left:
-    st.markdown("### Image")
+    st.markdown("### Camera")
     st.markdown("---")
     
-    # Đọc ảnh từ file anh1.jpg cùng cấp
-    image_path = "anh1.jpg"
-    image = None
+    # Camera input
+    camera_image = st.camera_input("Take a photo", key="camera")
     
-    if os.path.exists(image_path):
-        try:
-            # Đọc ảnh bằng OpenCV
-            img_cv = cv2.imread(image_path)
-            img_cv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
-            image = img_cv
-            st.image(image, caption="Input Image (anh1.jpg)", use_column_width=True)
-            st.success(f"Loaded: {image_path}")
-        except Exception as e:
-            st.error(f"Error loading image: {str(e)}")
-            st.info("Please make sure 'anh1.jpg' exists in the root folder")
-    else:
-        st.error(f"File not found: {image_path}")
-        st.info("Please place 'anh1.jpg' in the same folder as app.py")
-        st.stop()
-    
-    if image is not None:
+    if camera_image is not None:
+        # Convert to numpy array
+        image = load_image(camera_image)
+        st.image(image, caption="Captured Image", use_column_width=True)
+        
         if st.button("Recognize", use_container_width=True):
             with st.spinner("Processing..."):
                 session = load_model()
@@ -465,6 +460,9 @@ with col_left:
                     st.session_state['session'] = session
                     st.session_state['processed'] = True
                     st.rerun()
+    else:
+        st.info("Click the camera button above to take a photo")
+        st.markdown('<div class="camera-container"><div class="camera-label">📷 Ready to capture</div></div>', unsafe_allow_html=True)
 
 
 with col_right:
@@ -564,7 +562,7 @@ with col_right:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # QR Code Payment
+                # ===== QR CODE PAYMENT =====
                 st.markdown("### Payment")
                 st.markdown("---")
                 
@@ -620,9 +618,9 @@ with col_right:
             st.rerun()
     
     else:
-        st.info("Click RECOGNIZE to start")
+        st.info("Take a photo and click RECOGNIZE")
+        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Camera capture</div>', unsafe_allow_html=True)
         st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Automatic segmentation</div>', unsafe_allow_html=True)
-        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Real-time inference</div>', unsafe_allow_html=True)
 
 
 st.markdown("""
