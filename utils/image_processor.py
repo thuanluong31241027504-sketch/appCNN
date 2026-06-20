@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from PIL import Image
-import streamlit as st
 
 def load_image(image_file):
     """Đọc ảnh từ file upload"""
