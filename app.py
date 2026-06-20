@@ -8,10 +8,7 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import base64
-from tensorflow.keras.preprocessing import image
 import matplotlib.pyplot as plt
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 st.set_page_config(
     page_title="Food Detection System",
@@ -65,6 +62,11 @@ def load_image(uploaded_file):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img
 
+def preprocess_image(img, target_size=(224, 224)):
+    img_resized = cv2.resize(img, target_size)
+    img_array = np.expand_dims(img_resized, axis=0).astype(np.float32) / 255.0
+    return img_array
+
 def crop_food_items(image):
     img = cv2.resize(image, (1400, 1300))
     
@@ -89,7 +91,6 @@ def crop_food_items(image):
 
 def draw_boxes_fixed(img, results):
     img_copy = img.copy()
-    h, w = img_copy.shape[:2]
     
     positions = {
         1: (40, 700, 40, 760),
@@ -108,11 +109,6 @@ def draw_boxes_fixed(img, results):
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
     
     return img_copy
-
-def preprocess_image(img, target_size=(224, 224)):
-    img_resized = cv2.resize(img, target_size)
-    img_array = np.expand_dims(img_resized, axis=0).astype(np.float32) / 255.0
-    return img_array
 
 # ==================== QR CODE ====================
 def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name="LUONG NGOC THUAN"):
@@ -142,7 +138,6 @@ def load_model():
             except Exception:
                 continue
     
-    # Thử tìm trong thư mục con
     for root, dirs, files in os.walk('.'):
         for file in files:
             if file.endswith('.onnx'):
@@ -216,20 +211,6 @@ st.markdown("""
         border-top: 1px solid #000000;
         margin-top: 1rem;
         letter-spacing: 2px;
-    }
-    .total-card {
-        background: #ffffff;
-        border: 1px solid #000000;
-        padding: 1.2rem;
-        text-align: center;
-        margin: 0.8rem 0;
-    }
-    .total-card .amount {
-        color: #000000;
-        font-size: 2rem;
-        font-weight: 300;
-        letter-spacing: 2px;
-        margin: 0.2rem 0;
     }
     .summary-grid {
         display: grid;
