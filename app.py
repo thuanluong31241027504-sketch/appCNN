@@ -9,7 +9,7 @@ import onnxruntime as ort
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from data.menu import MENU, get_food_name, get_food_price, calculate_total
-from utils.image_processor import load_image, crop_food_items, draw_boxes_fixed
+from utils.image_processor import load_image, preprocess_image, crop_food_items, draw_boxes_fixed
 
 def check_model_files():
     model_files = []
@@ -44,26 +44,13 @@ def load_model():
     
     return None
 
-def preprocess_image(image, target_size=(224, 224)):
-    """Tiền xử lý ảnh cho model ONNX"""
-    if len(image.shape) == 2:
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    elif image.shape[2] == 4:
-        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-    
-    img_resized = cv2.resize(image, target_size)
-    img_normalized = img_resized.astype(np.float32) / 255.0
-    img_batch = np.expand_dims(img_normalized, axis=0)
-    
-    return img_batch
-
 st.set_page_config(
     page_title="Food Detection System",
     page_icon="",
     layout="wide"
 )
 
-st.title("Food Detection System - Kiem Tra Model")
+st.title("Food Detection System")
 st.markdown("---")
 
 with st.sidebar:
@@ -152,7 +139,7 @@ with col2:
                 
                 with col_info:
                     try:
-                        # Tiền xử lý
+                        # Tiền xử lý - KHÔNG CHIA 255 (giữ nguyên [0-255])
                         preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
                         
                         # Lấy tên input/output
@@ -166,23 +153,24 @@ with col2:
                         # ============ KIỂM TRA MODEL ============
                         
                         # IN RA TẤT CẢ XÁC SUẤT
-                        st.text("=== TAT CA XAC SUAT ===")
-                        for i, prob in enumerate(predictions):
-                            name = get_food_name(i)
-                            st.text(f"{i}. {name}: {prob:.6f}")
-                        
-                        # KIỂM TRA CÓ PHẢI TẤT CẢ ĐỀU GIỐNG NHAU KHÔNG
-                        unique_vals = np.unique(predictions)
-                        st.text(f"So gia tri khac nhau: {len(unique_vals)}")
-                        
-                        if len(unique_vals) == 1:
-                            st.error("⚠️ MODEL LOI! Tat ca cac class co cung 1 gia tri!")
-                            st.info("Model bi loi, can train lai hoac chuyen doi ONNX lai.")
-                        elif np.all(predictions == predictions[0]):
-                            st.warning("⚠️ Tat ca xac suat bang nhau!")
-                            st.info("Model output khong phan biet duoc cac class.")
-                        else:
-                            st.success("✅ Model co ve binh thuong (cac xac suat khac nhau)")
+                        with st.expander(f"Xem tat ca xac suat Khay {khay_id}"):
+                            st.text("=== TAT CA XAC SUAT ===")
+                            for i, prob in enumerate(predictions):
+                                name = get_food_name(i)
+                                st.text(f"{i}. {name}: {prob:.6f}")
+                            
+                            # KIỂM TRA CÓ PHẢI TẤT CẢ ĐỀU GIỐNG NHAU KHÔNG
+                            unique_vals = np.unique(predictions)
+                            st.text(f"So gia tri khac nhau: {len(unique_vals)}")
+                            
+                            if len(unique_vals) == 1:
+                                st.error("⚠️ MODEL LOI! Tat ca cac class co cung 1 gia tri!")
+                                st.info("Model bi loi, can train lai hoac chuyen doi ONNX lai.")
+                            elif np.all(predictions == predictions[0]):
+                                st.warning("⚠️ Tat ca xac suat bang nhau!")
+                                st.info("Model output khong phan biet duoc cac class.")
+                            else:
+                                st.success("✅ Model co ve binh thuong (cac xac suat khac nhau)")
                         
                         # ============ HẾT KIỂM TRA ============
                         
