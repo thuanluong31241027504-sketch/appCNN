@@ -48,26 +48,40 @@ st.markdown("""
     
     .header {
         background: #ffffff;
-        padding: 1.5rem 2rem;
-        border: 1px solid #1a1a1a;
+        padding: 2rem 2rem 1.5rem 2rem;
         margin-bottom: 2rem;
         text-align: center;
+        position: relative;
     }
     .header h1 {
-        font-size: 1.4rem;
+        font-size: 1.6rem;
         font-weight: 300;
-        letter-spacing: 6px;
+        letter-spacing: 8px;
         color: #1a1a1a;
         margin: 0;
         text-transform: uppercase;
+        text-shadow: 0 0 10px rgba(26, 26, 26, 0.05),
+                     0 0 20px rgba(26, 26, 26, 0.03),
+                     0 0 40px rgba(26, 26, 26, 0.02);
+        animation: glow 3s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+        from { text-shadow: 0 0 10px rgba(26, 26, 26, 0.05), 0 0 20px rgba(26, 26, 26, 0.03); }
+        to { text-shadow: 0 0 20px rgba(26, 26, 26, 0.15), 0 0 40px rgba(26, 26, 26, 0.08), 0 0 60px rgba(26, 26, 26, 0.04); }
     }
     .header p {
         font-size: 0.6rem;
         color: #888888;
-        margin: 0.4rem 0 0 0;
+        margin: 0.5rem 0 0 0;
         font-weight: 300;
-        letter-spacing: 1px;
+        letter-spacing: 2px;
         text-transform: none;
+    }
+    .header-line {
+        width: 60px;
+        height: 1px;
+        background: #1a1a1a;
+        margin: 1rem auto 0 auto;
     }
     
     .sidebar-title {
@@ -413,6 +427,7 @@ st.markdown("""
 <div class="header">
     <h1>FOOD IMAGE RECOGNIZING</h1>
     <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
+    <div class="header-line"></div>
 </div>
 """, unsafe_allow_html=True)
 
