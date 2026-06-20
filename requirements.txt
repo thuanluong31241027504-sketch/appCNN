@@ -1,8 +1,6 @@
-streamlit==1.28.1
-opencv-python==4.8.1.78
-numpy==1.24.3
-pillow==10.1.0
-tensorflow==2.13.0
-protobuf==3.20.3
-markdown-it-py==3.0.0
-rich==13.7.0
+streamlit
+opencv-python-headless
+numpy
+pillow
+tensorflow
+protobuf
