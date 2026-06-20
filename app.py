@@ -8,7 +8,6 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import base64
-from PIL import Image
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -39,17 +38,6 @@ def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name=
     return f"data:image/png;base64,{img_str}"
 
 
-# ===== ĐỌC ẢNH HEADER =====
-header_image_base64 = None
-if os.path.exists("anh2.jpg"):
-    try:
-        with open("anh2.jpg", "rb") as f:
-            img_data = f.read()
-            header_image_base64 = base64.b64encode(img_data).decode()
-    except Exception:
-        header_image_base64 = None
-
-
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
@@ -63,16 +51,9 @@ st.markdown("""
         padding: 1.5rem 2rem;
         border: 1px solid #1a1a1a;
         margin-bottom: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 2rem;
-        flex-wrap: wrap;
-    }
-    .header-content {
         text-align: center;
     }
-    .header-content h1 {
+    .header h1 {
         font-size: 1.4rem;
         font-weight: 300;
         letter-spacing: 6px;
@@ -80,36 +61,13 @@ st.markdown("""
         margin: 0;
         text-transform: uppercase;
     }
-    .header-content p {
+    .header p {
         font-size: 0.6rem;
         color: #888888;
         margin: 0.4rem 0 0 0;
         font-weight: 300;
         letter-spacing: 1px;
         text-transform: none;
-    }
-    .header-image {
-        flex-shrink: 0;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 2px solid #1a1a1a;
-        width: 100px;
-        height: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f5f5f5;
-    }
-    .header-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .header-image .placeholder {
-        font-size: 0.5rem;
-        color: #cccccc;
-        text-align: center;
-        letter-spacing: 1px;
     }
     
     .sidebar-title {
@@ -296,6 +254,13 @@ st.markdown("""
         padding: 0.3rem 0;
     }
     
+    .extra-input {
+        margin: 0.5rem 0;
+        padding: 0.5rem;
+        border: 1px solid #eeeeee;
+        background: #fafafa;
+    }
+    
     .prediction-item {
         padding: 0.2rem 0;
     }
@@ -444,30 +409,12 @@ def render_status_dot(ready):
     return f'<span class="status-dot {color}"></span>'
 
 
-# ===== HEADER WITH IMAGE =====
-header_html = """
+st.markdown("""
 <div class="header">
-    <div class="header-content">
-        <h1>FOOD IMAGE RECOGNIZING</h1>
-        <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
-    </div>
-"""
-
-if header_image_base64 is not None:
-    header_html += f"""
-    <div class="header-image">
-        <img src="data:image/jpeg;base64,{header_image_base64}" alt="Food">
-    </div>
-    """
-else:
-    header_html += """
-    <div class="header-image">
-        <span class="placeholder">No Image</span>
-    </div>
-    """
-
-header_html += "</div>"
-st.markdown(header_html, unsafe_allow_html=True)
+    <h1>FOOD IMAGE RECOGNIZING</h1>
+    <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
+</div>
+""", unsafe_allow_html=True)
 
 
 with st.sidebar:
