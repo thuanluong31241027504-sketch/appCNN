@@ -52,6 +52,7 @@ st.markdown("""
         margin-bottom: 2rem;
         text-align: center;
         position: relative;
+        overflow: hidden;
     }
     .header h1 {
         font-size: 1.8rem;
@@ -60,53 +61,85 @@ st.markdown("""
         color: #1a1a1a;
         margin: 0;
         text-transform: uppercase;
-        text-shadow: 0 0 10px rgba(26, 26, 26, 0.1),
-                     0 0 20px rgba(26, 26, 26, 0.05),
-                     0 0 40px rgba(26, 26, 26, 0.03),
-                     0 0 80px rgba(26, 26, 26, 0.02);
-        animation: glowPulse 3s ease-in-out infinite alternate;
-        transition: all 0.3s ease;
+        animation: breatheGlow 4s ease-in-out infinite;
+        display: inline-block;
+        position: relative;
     }
-    .header h1:hover {
-        text-shadow: 0 0 15px rgba(26, 26, 26, 0.2),
-                     0 0 30px rgba(26, 26, 26, 0.1),
-                     0 0 60px rgba(26, 26, 26, 0.05),
-                     0 0 100px rgba(26, 26, 26, 0.02);
-    }
-    @keyframes glowPulse {
+    @keyframes breatheGlow {
         0% {
-            text-shadow: 0 0 10px rgba(26, 26, 26, 0.05),
-                         0 0 20px rgba(26, 26, 26, 0.02),
-                         0 0 40px rgba(26, 26, 26, 0.01);
-            letter-spacing: 10px;
+            text-shadow: 0 0 5px rgba(26, 26, 26, 0.02);
+            letter-spacing: 8px;
+            opacity: 0.7;
+            transform: scale(1);
         }
-        50% {
-            text-shadow: 0 0 20px rgba(26, 26, 26, 0.12),
-                         0 0 40px rgba(26, 26, 26, 0.06),
-                         0 0 60px rgba(26, 26, 26, 0.03);
+        20% {
+            text-shadow: 0 0 15px rgba(26, 26, 26, 0.08),
+                         0 0 30px rgba(26, 26, 26, 0.04);
             letter-spacing: 12px;
+            opacity: 1;
+            transform: scale(1.02);
+        }
+        40% {
+            text-shadow: 0 0 25px rgba(26, 26, 26, 0.15),
+                         0 0 50px rgba(26, 26, 26, 0.08),
+                         0 0 80px rgba(26, 26, 26, 0.04);
+            letter-spacing: 16px;
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        60% {
+            text-shadow: 0 0 15px rgba(26, 26, 26, 0.08),
+                         0 0 30px rgba(26, 26, 26, 0.04);
+            letter-spacing: 12px;
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        80% {
+            text-shadow: 0 0 5px rgba(26, 26, 26, 0.02);
+            letter-spacing: 8px;
+            opacity: 0.7;
+            transform: scale(1);
         }
         100% {
-            text-shadow: 0 0 30px rgba(26, 26, 26, 0.18),
-                         0 0 60px rgba(26, 26, 26, 0.09),
-                         0 0 90px rgba(26, 26, 26, 0.04),
-                         0 0 120px rgba(26, 26, 26, 0.02);
-            letter-spacing: 14px;
+            text-shadow: 0 0 5px rgba(26, 26, 26, 0.02);
+            letter-spacing: 8px;
+            opacity: 0.7;
+            transform: scale(1);
         }
+    }
+    .header h1::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 1px;
+        background: #1a1a1a;
+        animation: lineExpand 4s ease-in-out infinite;
+    }
+    @keyframes lineExpand {
+        0% { width: 0; opacity: 0; }
+        20% { width: 30%; opacity: 0.3; }
+        40% { width: 80%; opacity: 0.6; }
+        50% { width: 100%; opacity: 0.8; }
+        60% { width: 80%; opacity: 0.6; }
+        80% { width: 30%; opacity: 0.3; }
+        100% { width: 0; opacity: 0; }
     }
     .header p {
         font-size: 0.6rem;
         color: #888888;
-        margin: 0.6rem 0 0 0;
+        margin: 0.8rem 0 0 0;
         font-weight: 300;
         letter-spacing: 3px;
         text-transform: none;
-        animation: fadeInUp 1s ease-out;
+        animation: fadeInUp 1.5s ease-out;
     }
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(15px);
         }
         to {
             opacity: 1;
@@ -114,11 +147,12 @@ st.markdown("""
         }
     }
     .header-line {
-        width: 200px;
+        width: 400px;
+        max-width: 80%;
         height: 1px;
-        background: linear-gradient(to right, transparent, #1a1a1a 20%, #1a1a1a 80%, transparent);
+        background: linear-gradient(to right, transparent, #1a1a1a 15%, #1a1a1a 85%, transparent);
         margin: 1.2rem auto 0 auto;
-        opacity: 0.6;
+        opacity: 0.5;
     }
     
     .sidebar-title {
