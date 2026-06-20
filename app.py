@@ -62,12 +62,12 @@ st.markdown("""
         text-transform: uppercase;
     }
     .header p {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         color: #888888;
         margin: 0.4rem 0 0 0;
         font-weight: 300;
-        letter-spacing: 3px;
-        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-transform: none;
     }
     
     .sidebar-title {
@@ -83,18 +83,17 @@ st.markdown("""
         padding: 0.3rem 0;
         border-bottom: 1px solid #eeeeee;
         font-size: 0.65rem;
-        color: #333333;
+        color: #1a1a1a;
         font-weight: 300;
         transition: all 0.2s;
     }
     .menu-item:hover {
         border-bottom: 1px solid #1a1a1a;
         padding-left: 0.5rem;
-        color: #000000;
     }
     .menu-price {
         float: right;
-        color: #1a1a1a;
+        color: #22c55e;
         font-weight: 400;
     }
     .menu-category {
@@ -122,7 +121,7 @@ st.markdown("""
         text-transform: uppercase;
     }
     .total-card .amount {
-        color: #1a1a1a;
+        color: #22c55e;
         font-size: 2.2rem;
         font-weight: 300;
         letter-spacing: 3px;
@@ -146,6 +145,9 @@ st.markdown("""
     .invoice-row:hover {
         background: #fafafa;
     }
+    .invoice-row .price {
+        color: #22c55e;
+    }
     .invoice-total {
         display: flex;
         justify-content: space-between;
@@ -155,6 +157,9 @@ st.markdown("""
         font-weight: 500;
         color: #1a1a1a;
         margin-top: 0.5rem;
+    }
+    .invoice-total .total-price {
+        color: #22c55e;
     }
     
     .stButton button {
@@ -218,10 +223,14 @@ st.markdown("""
         text-align: center;
         padding: 1.5rem 0 0.5rem 0;
         color: #dddddd;
-        font-size: 0.5rem;
+        font-size: 0.55rem;
         border-top: 1px solid #eeeeee;
         margin-top: 1.5rem;
-        letter-spacing: 3px;
+        letter-spacing: 2px;
+    }
+    .footer .copyright {
+        color: #22c55e;
+        font-weight: 300;
     }
     
     .status-dot {
@@ -232,7 +241,7 @@ st.markdown("""
         margin-right: 8px;
     }
     .status-dot.green {
-        background: #1a1a1a;
+        background: #22c55e;
     }
     .status-dot.red {
         background: #cccccc;
@@ -258,11 +267,25 @@ st.markdown("""
     .prediction-item .main {
         font-weight: 400;
         font-size: 0.8rem;
+        color: #1a1a1a;
+    }
+    .prediction-item .main .conf {
+        color: #888888;
+        font-size: 0.6rem;
+        font-weight: 300;
     }
     .prediction-item .sub {
         font-size: 0.55rem;
-        color: #888888;
+        color: #22c55e;
         font-weight: 300;
+    }
+    .prediction-item .alt {
+        color: #bbbbbb;
+        font-size: 0.6rem;
+    }
+    .prediction-item .alt .conf-alt {
+        color: #cccccc;
+        font-size: 0.5rem;
     }
     
     .qr-container {
@@ -279,7 +302,7 @@ st.markdown("""
     .qr-container .qr-amount {
         font-size: 1.2rem;
         font-weight: 300;
-        color: #1a1a1a;
+        color: #22c55e;
         margin: 0.3rem 0;
     }
     .qr-container .qr-bank {
@@ -389,7 +412,7 @@ def render_status_dot(ready):
 st.markdown("""
 <div class="header">
     <h1>FOOD IMAGE RECOGNIZING</h1>
-    <p>Smart Detection · Automatic Billing</p>
+    <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -410,7 +433,7 @@ with st.sidebar:
         for item in items:
             note = f" ({item['note']})" if item.get('note') else ""
             st.markdown(
-                f"<div class='menu-item'>{item['name']} {note} "
+                f"<div class='menu-item'>{item['name']}{note} "
                 f"<span class='menu-price'>{item['price']:,} VND</span></div>",
                 unsafe_allow_html=True
             )
@@ -518,7 +541,7 @@ with col_right:
                                 name = get_food_name(fid)
                                 price = get_food_price(fid)
                                 if i == 0:
-                                    st.markdown(f'<div class="prediction-item"><span class="main">▸ {name}</span> <span style="font-size:0.6rem;color:#888;">{conf*100:.1f}%</span><br><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
+                                    st.markdown(f'<div class="prediction-item"><span class="main">▸ {name} <span class="conf">{conf*100:.1f}%</span></span><br><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
                                     detected_foods.append(fid)
                                     
                                     if has_extra_option(fid):
@@ -542,7 +565,7 @@ with col_right:
                                         "confidence": conf
                                     })
                                 else:
-                                    st.markdown(f'<div class="prediction-item"><span style="color:#bbb;">{name}</span> <span style="font-size:0.5rem;color:#ccc;">{conf*100:.1f}%</span></div>', unsafe_allow_html=True)
+                                    st.markdown(f'<div class="prediction-item"><span class="alt">{name} <span class="conf-alt">{conf*100:.1f}%</span></span></div>', unsafe_allow_html=True)
                             
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
@@ -579,7 +602,7 @@ with col_right:
                             f"<div class='invoice-row'>"
                             f"<span>#{i+1}</span>"
                             f"<span>{detail['name']}{extra_text}</span>"
-                            f"<span>{detail['price']:,} VND</span>"
+                            f"<span class='price'>{detail['price']:,} VND</span>"
                             f"</div>",
                             unsafe_allow_html=True
                         )
@@ -587,7 +610,7 @@ with col_right:
                     st.markdown(
                         f"<div class='invoice-total'>"
                         f"<span>TOTAL</span>"
-                        f"<span>{total_price:,} VND</span>"
+                        f"<span class='total-price'>{total_price:,} VND</span>"
                         f"</div>",
                         unsafe_allow_html=True
                     )
@@ -620,6 +643,6 @@ with col_right:
 
 st.markdown("""
 <div class="footer">
-    <p>FOOD IMAGE RECOGNIZING · ONNX RUNTIME</p>
+    <p>FOOD IMAGE RECOGNIZING <span class="copyright">2026 C</span></p>
 </div>
 """, unsafe_allow_html=True)
