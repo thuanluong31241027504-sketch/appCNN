@@ -27,37 +27,32 @@ st.markdown("""
         font-family: 'JetBrains Mono', 'Courier New', monospace;
     }
     
-    .main {
-        background: #f5f5f5;
-    }
-    
     .header {
         background: #ffffff;
-        padding: 2rem 2rem;
+        padding: 1.5rem 2rem;
         border: 1px solid #000000;
         margin-bottom: 2rem;
         text-align: center;
     }
     .header h1 {
-        font-size: 1.6rem;
+        font-size: 1.4rem;
         font-weight: 300;
         letter-spacing: 4px;
         color: #000000;
         margin: 0;
     }
     .header p {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: #666666;
-        margin: 0.5rem 0 0 0;
+        margin: 0.3rem 0 0 0;
         font-weight: 300;
         letter-spacing: 2px;
     }
     
-    /* ===== MENU ===== */
     .menu-item {
-        padding: 0.4rem 0;
+        padding: 0.3rem 0;
         border-bottom: 1px solid #e0e0e0;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: #333333;
         font-weight: 300;
     }
@@ -87,8 +82,8 @@ st.markdown("""
     }
     .front {
         display: block;
-        padding: 0.8rem 1.5rem;
-        font-size: 0.7rem;
+        padding: 0.7rem 1.5rem;
+        font-size: 0.65rem;
         font-weight: 400;
         letter-spacing: 3px;
         text-transform: uppercase;
@@ -97,34 +92,19 @@ st.markdown("""
         transform: translateY(-4px);
         border: 1px solid #000000;
         transition: all 0.1s ease;
-        box-shadow: 
-            0 2px 0 #000000,
-            0 4px 0 #000000;
+        box-shadow: 0 2px 0 #000000, 0 4px 0 #000000;
     }
     .pushable:hover .front {
         background: #000000;
         color: #ffffff;
-        box-shadow: 
-            0 1px 0 #000000,
-            0 2px 0 #000000;
+        box-shadow: 0 1px 0 #000000, 0 2px 0 #000000;
         transform: translateY(-2px);
     }
     .pushable:active .front {
-        box-shadow: 
-            0 0px 0 #000000,
-            0 0px 0 #000000;
+        box-shadow: 0 0px 0 #000000, 0 0px 0 #000000;
         transform: translateY(0px);
     }
-    .pushable:disabled .front {
-        opacity: 0.3;
-        box-shadow: 
-            0 1px 0 #000000,
-            0 2px 0 #000000;
-        transform: translateY(-2px);
-        cursor: not-allowed;
-    }
     
-    /* ===== SECONDARY BUTTON ===== */
     .pushable-secondary {
         background: transparent;
         border: none;
@@ -136,8 +116,8 @@ st.markdown("""
     }
     .pushable-secondary .front-secondary {
         display: block;
-        padding: 0.6rem 1.5rem;
-        font-size: 0.6rem;
+        padding: 0.5rem 1.5rem;
+        font-size: 0.55rem;
         font-weight: 300;
         letter-spacing: 2px;
         text-transform: uppercase;
@@ -146,33 +126,26 @@ st.markdown("""
         transform: translateY(-3px);
         border: 1px solid #cccccc;
         transition: all 0.1s ease;
-        box-shadow: 
-            0 1px 0 #cccccc,
-            0 2px 0 #cccccc;
+        box-shadow: 0 1px 0 #cccccc, 0 2px 0 #cccccc;
     }
     .pushable-secondary:hover .front-secondary {
         color: #000000;
         border-color: #000000;
-        box-shadow: 
-            0 1px 0 #000000,
-            0 2px 0 #000000;
+        box-shadow: 0 1px 0 #000000, 0 2px 0 #000000;
         transform: translateY(-2px);
     }
     .pushable-secondary:active .front-secondary {
-        box-shadow: 
-            0 0px 0 #000000,
-            0 0px 0 #000000;
+        box-shadow: 0 0px 0 #000000, 0 0px 0 #000000;
         transform: translateY(0px);
     }
     
-    /* ===== EXPANDER ===== */
     .streamlit-expanderHeader {
         font-family: 'JetBrains Mono', monospace !important;
         background: #ffffff !important;
         border: 1px solid #000000 !important;
         border-radius: 0px !important;
         color: #000000 !important;
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
         font-weight: 300 !important;
         letter-spacing: 2px !important;
         text-transform: uppercase !important;
@@ -193,53 +166,88 @@ st.markdown("""
     .total-card {
         background: #ffffff;
         border: 1px solid #000000;
-        padding: 2rem;
+        padding: 1.5rem;
         text-align: center;
-        margin: 1.5rem 0;
+        margin: 1rem 0;
     }
-    .total-card p {
+    .total-card .label {
         color: #666666;
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         font-weight: 300;
         letter-spacing: 3px;
-        margin: 0;
         text-transform: uppercase;
     }
-    .total-card h2 {
+    .total-card .amount {
         color: #000000;
-        font-size: 2.5rem;
+        font-size: 2.2rem;
         font-weight: 300;
         letter-spacing: 2px;
-        margin: 0.5rem 0;
+        margin: 0.3rem 0;
     }
-    .total-card .sub {
+    .total-card .summary {
         color: #666666;
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         font-weight: 300;
         letter-spacing: 1px;
     }
     
-    /* ===== METRICS ===== */
-    .stMetric {
-        background: #ffffff !important;
-        border: 1px solid #000000 !important;
-        border-radius: 0px !important;
-        padding: 1rem !important;
+    /* ===== INVOICE ROW ===== */
+    .invoice-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.7rem;
+        color: #333333;
     }
-    .stMetric label {
-        color: #666666 !important;
-        font-size: 0.55rem !important;
-        font-weight: 300 !important;
-        letter-spacing: 2px !important;
-        text-transform: uppercase !important;
+    .invoice-row .tray {
+        font-weight: 300;
     }
-    .stMetric .stMetricValue {
-        color: #000000 !important;
-        font-size: 1.3rem !important;
-        font-weight: 300 !important;
+    .invoice-row .item-name {
+        font-weight: 400;
+    }
+    .invoice-row .item-price {
+        font-weight: 400;
+        color: #000000;
+    }
+    .invoice-total {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.6rem 0;
+        border-top: 2px solid #000000;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #000000;
+        margin-top: 0.5rem;
     }
     
-    /* ===== ALERTS ===== */
+    /* ===== SUMMARY GRID ===== */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+    .summary-item {
+        border: 1px solid #000000;
+        padding: 0.8rem;
+        text-align: center;
+        background: #ffffff;
+    }
+    .summary-item .value {
+        font-size: 1.3rem;
+        font-weight: 300;
+        color: #000000;
+    }
+    .summary-item .desc {
+        font-size: 0.5rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 0.2rem;
+    }
+    
     .stAlert {
         border-radius: 0px !important;
         background: #f5f5f5 !important;
@@ -248,60 +256,48 @@ st.markdown("""
         font-weight: 300 !important;
         font-size: 0.7rem !important;
     }
-    .stAlert.success {
-        border-left-color: #000000 !important;
-    }
-    .stAlert.warning {
-        border-left-color: #000000 !important;
-    }
-    .stAlert.error {
-        border-left-color: #000000 !important;
-    }
     
-    /* ===== BADGE ===== */
     .badge-high {
         color: #000000;
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 400;
         letter-spacing: 1px;
         border: 1px solid #000000;
-        padding: 0.15rem 0.8rem;
+        padding: 0.1rem 0.6rem;
         display: inline-block;
     }
     .badge-medium {
         color: #666666;
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 400;
         letter-spacing: 1px;
         border: 1px solid #666666;
-        padding: 0.15rem 0.8rem;
+        padding: 0.1rem 0.6rem;
         display: inline-block;
     }
     .badge-low {
         color: #999999;
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 400;
         letter-spacing: 1px;
         border: 1px solid #999999;
-        padding: 0.15rem 0.8rem;
+        padding: 0.1rem 0.6rem;
         display: inline-block;
     }
     
-    /* ===== IMAGE ===== */
     .stImage figcaption {
         color: #666666 !important;
-        font-size: 0.6rem !important;
+        font-size: 0.55rem !important;
         font-weight: 300 !important;
         letter-spacing: 1px !important;
         text-align: center !important;
     }
     
-    /* ===== FILE UPLOADER ===== */
     .stFileUploader {
         background: #ffffff !important;
         border: 1px dashed #000000 !important;
         border-radius: 0px !important;
-        padding: 1rem !important;
+        padding: 0.8rem !important;
     }
     .stFileUploader:hover {
         border-style: solid !important;
@@ -310,9 +306,9 @@ st.markdown("""
         color: #666666 !important;
         font-weight: 300 !important;
         letter-spacing: 1px !important;
+        font-size: 0.7rem !important;
     }
     
-    /* ===== SIDEBAR ===== */
     .css-1d391kg {
         background-color: #ffffff !important;
         border-right: 1px solid #000000 !important;
@@ -326,31 +322,38 @@ st.markdown("""
         letter-spacing: 2px !important;
     }
     
-    /* ===== DIVIDER ===== */
     hr {
         border: none;
         border-top: 1px solid #000000;
-        margin: 1.5rem 0;
+        margin: 1rem 0;
     }
     
-    /* ===== FOOTER ===== */
     .footer {
         text-align: center;
-        padding: 2rem 0 1rem 0;
+        padding: 1.5rem 0 0.5rem 0;
         color: #cccccc;
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         border-top: 1px solid #000000;
-        margin-top: 2rem;
+        margin-top: 1.5rem;
         letter-spacing: 2px;
     }
     
-    /* ===== SCROLLBAR ===== */
     ::-webkit-scrollbar {
         width: 4px;
         background: #f5f5f5;
     }
     ::-webkit-scrollbar-thumb {
         background: #000000;
+    }
+    
+    .tray-container {
+        border: 1px solid #000000;
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        background: #fafafa;
+    }
+    .tray-container:hover {
+        background: #f0f0f0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -447,7 +450,6 @@ with col_left:
         image = load_image(uploaded_file)
         st.image(image, caption="INPUT", use_column_width=True)
         
-        # ===== PUSHABLE BUTTON =====
         if st.button("RECOGNIZE", type="primary", use_container_width=True):
             with st.spinner("Processing..."):
                 session = load_model()
@@ -528,11 +530,11 @@ with col_right:
                                     st.text(f"{name}  {conf*100:.1f}%")
                             
                             if top3_conf[0] > 0.8:
-                                st.markdown('<span class="badge-high">HIGH CONFIDENCE</span>', unsafe_allow_html=True)
+                                st.markdown('<span class="badge-high">HIGH</span>', unsafe_allow_html=True)
                             elif top3_conf[0] > 0.5:
-                                st.markdown('<span class="badge-medium">MEDIUM CONFIDENCE</span>', unsafe_allow_html=True)
+                                st.markdown('<span class="badge-medium">MEDIUM</span>', unsafe_allow_html=True)
                             else:
-                                st.markdown('<span class="badge-low">LOW CONFIDENCE</span>', unsafe_allow_html=True)
+                                st.markdown('<span class="badge-low">LOW</span>', unsafe_allow_html=True)
                             
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
@@ -540,22 +542,48 @@ with col_right:
             if detected_foods:
                 total_price, details = calculate_total(detected_foods)
                 
-                st.markdown("---")
-                st.markdown(f"""
-                <div class="total-card">
-                    <p>TOTAL</p>
-                    <h2>{total_price:,} VND</h2>
-                    <p class="sub">{len(detected_foods)} items · {len(set(detected_foods))} types</p>
+                # ===== SUMMARY GRID =====
+                st.markdown("""
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="value">{}</div>
+                        <div class="desc">Items</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="value">{}</div>
+                        <div class="desc">Types</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="value">{:,} VND</div>
+                        <div class="desc">Total</div>
+                    </div>
                 </div>
-                """, unsafe_allow_html=True)
+                """.format(
+                    len(detected_foods),
+                    len(set(detected_foods)),
+                    total_price
+                ), unsafe_allow_html=True)
                 
-                with st.expander("INVOICE DETAILS", expanded=False):
+                # ===== INVOICE =====
+                with st.expander("INVOICE DETAILS", expanded=True):
+                    invoice_html = ""
                     for i, detail in enumerate(details):
-                        st.text(f"Tray {i+1}: {detail['name']} - {detail['price']:,} VND")
+                        invoice_html += f"""
+                        <div class="invoice-row">
+                            <span class="tray">TRAY {i+1}</span>
+                            <span class="item-name">{detail['name']}</span>
+                            <span class="item-price">{detail['price']:,} VND</span>
+                        </div>
+                        """
                     
-                    st.markdown("---")
-                    st.markdown(f"**Total: {total_price:,} VND**")
-                    st.caption(f"{len(detected_foods)} items · {len(set(detected_foods))} types")
+                    invoice_html += f"""
+                    <div class="invoice-total">
+                        <span>TOTAL</span>
+                        <span>{total_price:,} VND</span>
+                    </div>
+                    """
+                    
+                    st.markdown(invoice_html, unsafe_allow_html=True)
                     
                     invoice_text = f"INVOICE\n{'-'*30}\n"
                     for i, d in enumerate(details):
@@ -568,20 +596,10 @@ with col_right:
                         file_name=f"invoice_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
                         mime="text/plain"
                     )
-                
-                col_stat1, col_stat2, col_stat3 = st.columns(3)
-                with col_stat1:
-                    st.metric("ITEMS", len(detected_foods))
-                with col_stat2:
-                    st.metric("TYPES", len(set(detected_foods)))
-                with col_stat3:
-                    avg_price = total_price // len(detected_foods) if len(detected_foods) > 0 else 0
-                    st.metric("AVG PRICE", f"{avg_price:,} VND")
             
         else:
             st.warning("No trays detected")
         
-        # ===== RESET BUTTON (secondary) =====
         if st.button("RESET", use_container_width=True):
             st.session_state.clear()
             st.rerun()
