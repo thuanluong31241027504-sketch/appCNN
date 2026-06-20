@@ -1,56 +1,124 @@
-import numpy as np
 import cv2
+import numpy as np
+from PIL import Image
 
-def load_image(uploaded_file):
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    return img
+def load_image(image_file):
+    """Đọc ảnh từ file upload"""
+    img = Image.open(image_file)
+    return np.array(img)
 
-def preprocess_image(img, target_size=(224, 224)):
-    img_resized = cv2.resize(img, target_size)
-    img_array = np.expand_dims(img_resized, axis=0).astype(np.float32) / 255.0
-    return img_array
-
-def crop_food_items(image):
-    img = cv2.resize(image, (1400, 1300))
+def preprocess_image(image, target_size=(224, 224)):
+    """
+    Tiền xử lý ảnh cho model ONNX
+    KHÔNG chia 255 - giữ nguyên [0-255] như lúc train
+    """
+    # Chuyển đổi sang RGB nếu cần
+    if len(image.shape) == 2:
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    elif image.shape[2] == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
     
-    regions = {
-        "canhrau": img[40:700, 40:760],
-        "comtrang": img[40:700, 820:1380],
-        "rausong": img[760:1280, 30:500],
-        "cakho": img[760:1280, 520:920],
-        "thitkho": img[760:1280, 950:1380]
-    }
+    # Resize ảnh
+    img_resized = cv2.resize(image, target_size)
+    
+    # Chuyển sang float32 - KHÔNG CHIA 255
+    img_array = img_resized.astype(np.float32)
+    
+    # Thêm batch dimension
+    img_batch = np.expand_dims(img_array, axis=0)
+    
+    return img_batch
+
+def crop_food_items_fixed(image):
+    """
+    Cắt ảnh theo tọa độ cố định đã điều chỉnh
+    Đầu tiên resize ảnh về 1400x1300
+    """
+    # RESIZE ẢNH VỀ 1400x1300
+    img_resized = cv2.resize(image, (1400, 1300))
+    
+    # Định nghĩa các vùng cắt theo tọa độ đã điều chỉnh
+    # Format: (y1, y2, x1, x2)
+    regions = [
+        {
+            "id": 1,
+            "name": "Khay 1",
+            "y1": 0, "y2": 715,
+            "x1": 64, "x2": 687
+        },
+        {
+            "id": 2,
+            "name": "Khay 2",
+            "y1": 52, "y2": 723,
+            "x1": 808, "x2": 1307
+        },
+        {
+            "id": 3,
+            "name": "Khay 3",
+            "y1": 760, "y2": 1206,
+            "x1": 30, "x2": 461
+        },
+        {
+            "id": 4,
+            "name": "Khay 4",
+            "y1": 760, "y2": 1229,
+            "x1": 472, "x2": 897
+        },
+        {
+            "id": 5,
+            "name": "Khay 5",
+            "y1": 749, "y2": 1247,
+            "x1": 892, "x2": 1315
+        }
+    ]
     
     cropped_results = []
-    for i, (name, crop) in enumerate(regions.items()):
-        if crop.size > 0:
-            cropped_results.append({
-                "id": i + 1,
-                "name": name,
-                "image": crop
-            })
     
-    return cropped_results, img
+    for region in regions:
+        y1, y2 = region["y1"], region["y2"]
+        x1, x2 = region["x1"], region["x2"]
+        
+        # Kiểm tra tọa độ hợp lệ
+        if y1 < img_resized.shape[0] and y2 <= img_resized.shape[0] and \
+           x1 < img_resized.shape[1] and x2 <= img_resized.shape[1]:
+            
+            cropped_img = img_resized[y1:y2, x1:x2]
+            
+            if cropped_img.shape[0] > 0 and cropped_img.shape[1] > 0:
+                cropped_results.append({
+                    "id": region["id"],
+                    "name": region["name"],
+                    "image": cropped_img,
+                    "bbox": (x1, y1, x2 - x1, y2 - y1)
+                })
+    
+    return cropped_results, img_resized
 
-def draw_boxes_fixed(img, results):
-    img_copy = img.copy()
+def crop_food_items(image):
+    """Wrapper function"""
+    return crop_food_items_fixed(image)
+
+def draw_boxes_fixed(image, cropped_results):
+    """Vẽ bounding boxes lên ảnh"""
+    img_copy = image.copy()
     
-    positions = {
-        1: (40, 700, 40, 760),
-        2: (40, 700, 820, 1380),
-        3: (760, 1280, 30, 500),
-        4: (760, 1280, 520, 920),
-        5: (760, 1280, 950, 1380)
-    }
+    colors = [
+        (0, 255, 0),    # Xanh lá
+        (255, 0, 0),    # Đỏ
+        (0, 0, 255),    # Xanh dương
+        (255, 255, 0),  # Vàng
+        (255, 0, 255)   # Tím
+    ]
     
-    for result in results:
-        idx = result["id"]
-        if idx in positions:
-            y1, y2, x1, x2 = positions[idx]
-            cv2.rectangle(img_copy, (x1, y1), (x2, y2), (0, 255, 0), 3)
-            cv2.putText(img_copy, f"Tray {idx}", (x1, y1 - 10), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    for idx, result in enumerate(cropped_results):
+        x1, y1, w, h = result["bbox"]
+        color = colors[idx % len(colors)]
+        
+        # Vẽ box
+        cv2.rectangle(img_copy, (x1, y1), (x1 + w, y1 + h), color, 3)
+        
+        # Thêm số thứ tự
+        cv2.putText(img_copy, f"Khay {result['id']}", (x1 + 5, y1 + 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
     
     return img_copy
