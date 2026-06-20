@@ -23,43 +23,51 @@ st.set_page_config(
 
 
 def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name="LUONG NGOC THUAN"):
+    """Generate QR code for bank transfer"""
     qr_data = f"https://img.vietqr.io/image/{bank_name}-{bank_id}-compact.png?amount={amount}&addInfo=THANHTOAN"
+    
     qr = qrcode.QRCode(version=1, box_size=4, border=2)
     qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
+    
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode()
+    
     return f"data:image/png;base64,{img_str}"
 
 
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
-    * { font-family: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace; }
     
-    .main-header {
+    * {
+        font-family: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    }
+    
+    .header {
         background: #ffffff;
-        padding: 1.8rem 2rem;
+        padding: 1.5rem 2rem;
         border: 1px solid #1a1a1a;
         margin-bottom: 2rem;
         text-align: center;
     }
-    .main-header h1 {
+    .header h1 {
         font-size: 1.4rem;
         font-weight: 300;
-        letter-spacing: 8px;
+        letter-spacing: 6px;
         color: #1a1a1a;
         margin: 0;
         text-transform: uppercase;
     }
-    .main-header p {
+    .header p {
         font-size: 0.6rem;
         color: #888888;
-        margin: 0.5rem 0 0 0;
+        margin: 0.4rem 0 0 0;
         font-weight: 300;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
+        text-transform: none;
     }
     
     .sidebar-title {
@@ -73,21 +81,28 @@ st.markdown("""
     
     .menu-item {
         padding: 0.3rem 0;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid #eeeeee;
         font-size: 0.65rem;
         color: #1a1a1a;
         font-weight: 300;
         transition: all 0.2s;
     }
-    .menu-item:hover { border-bottom: 1px solid #1a1a1a; padding-left: 0.5rem; }
-    .menu-price { float: right; color: #22c55e; font-weight: 400; }
+    .menu-item:hover {
+        border-bottom: 1px solid #1a1a1a;
+        padding-left: 0.5rem;
+    }
+    .menu-price {
+        float: right;
+        color: #22c55e;
+        font-weight: 400;
+    }
     .menu-category {
         font-size: 0.55rem;
         color: #999999;
         letter-spacing: 2px;
         text-transform: uppercase;
         margin: 0.8rem 0 0.2rem 0;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid #eeeeee;
         padding-bottom: 0.2rem;
     }
     
@@ -98,20 +113,41 @@ st.markdown("""
         text-align: center;
         margin: 1rem 0;
     }
-    .total-card .label { color: #999999; font-size: 0.5rem; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; }
-    .total-card .amount { color: #22c55e; font-size: 2.2rem; font-weight: 300; letter-spacing: 3px; margin: 0.3rem 0; }
-    .total-card .summary { color: #999999; font-size: 0.55rem; font-weight: 300; letter-spacing: 2px; }
+    .total-card .label {
+        color: #999999;
+        font-size: 0.5rem;
+        font-weight: 300;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+    }
+    .total-card .amount {
+        color: #22c55e;
+        font-size: 2.2rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        margin: 0.3rem 0;
+    }
+    .total-card .summary {
+        color: #999999;
+        font-size: 0.55rem;
+        font-weight: 300;
+        letter-spacing: 2px;
+    }
     
     .invoice-row {
         display: flex;
         justify-content: space-between;
         padding: 0.4rem 0;
-        border-bottom: 1px solid #f5f5f5;
+        border-bottom: 1px solid #f0f0f0;
         font-size: 0.65rem;
         color: #333333;
     }
-    .invoice-row:hover { background: #fafafa; }
-    .invoice-row .price { color: #22c55e; }
+    .invoice-row:hover {
+        background: #fafafa;
+    }
+    .invoice-row .price {
+        color: #22c55e;
+    }
     .invoice-total {
         display: flex;
         justify-content: space-between;
@@ -122,7 +158,9 @@ st.markdown("""
         color: #1a1a1a;
         margin-top: 0.5rem;
     }
-    .invoice-total .total-price { color: #22c55e; }
+    .invoice-total .total-price {
+        color: #22c55e;
+    }
     
     .stButton button {
         background: #ffffff;
@@ -137,10 +175,12 @@ st.markdown("""
         width: 100%;
         transition: all 0.2s ease;
     }
-    .stButton button:hover { background: #1a1a1a; color: #ffffff; }
-    .stButton button:active { transform: scale(0.98); }
+    .stButton button:hover {
+        background: #1a1a1a;
+        color: #ffffff;
+    }
     
-    .stExpander > div:first-child {
+    .streamlit-expanderHeader {
         background: #ffffff !important;
         border: 1px solid #1a1a1a !important;
         border-radius: 0px !important;
@@ -150,8 +190,10 @@ st.markdown("""
         letter-spacing: 3px !important;
         text-transform: uppercase !important;
     }
-    .stExpander > div:first-child:hover { background: #f7f7f7 !important; }
-    .stExpander > div:last-child {
+    .streamlit-expanderHeader:hover {
+        background: #f7f7f7 !important;
+    }
+    .streamlit-expanderContent {
         background: #ffffff !important;
         border: 1px solid #1a1a1a !important;
         border-top: none !important;
@@ -159,15 +201,22 @@ st.markdown("""
         padding: 1rem !important;
     }
     
-    .stAlert { border-radius: 0px !important; background: #f7f7f7 !important; border-left: 3px solid #1a1a1a !important; color: #333333 !important; font-weight: 300 !important; font-size: 0.65rem !important; }
+    .stAlert {
+        border-radius: 0px !important;
+        background: #f7f7f7 !important;
+        border-left: 3px solid #1a1a1a !important;
+        color: #333333 !important;
+        font-weight: 300 !important;
+        font-size: 0.65rem !important;
+    }
     
-    .stImage figcaption { 
-        color: #999999 !important; 
-        font-size: 0.5rem !important; 
-        font-weight: 300 !important; 
-        letter-spacing: 2px !important; 
-        text-align: center !important; 
-        text-transform: uppercase !important; 
+    .stImage figcaption {
+        color: #999999 !important;
+        font-size: 0.5rem !important;
+        font-weight: 300 !important;
+        letter-spacing: 2px !important;
+        text-align: center !important;
+        text-transform: uppercase !important;
     }
     
     .footer {
@@ -175,24 +224,69 @@ st.markdown("""
         padding: 1.5rem 0 0.5rem 0;
         color: #999999;
         font-size: 0.55rem;
-        border-top: 1px solid #f0f0f0;
+        border-top: 1px solid #eeeeee;
         margin-top: 1.5rem;
         letter-spacing: 2px;
     }
-    .footer .copyright { color: #999999; font-weight: 300; }
+    .footer .copyright {
+        color: #999999;
+        font-weight: 300;
+    }
     
-    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
-    .status-dot.green { background: #22c55e; }
-    .status-dot.red { background: #cccccc; }
+    .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    .status-dot.green {
+        background: #22c55e;
+    }
+    .status-dot.red {
+        background: #cccccc;
+    }
     
-    .model-info { font-size: 0.55rem; color: #888888; letter-spacing: 1px; padding: 0.3rem 0; }
+    .model-info {
+        font-size: 0.55rem;
+        color: #888888;
+        letter-spacing: 1px;
+        padding: 0.3rem 0;
+    }
     
-    .prediction-item { padding: 0.2rem 0; }
-    .prediction-item .main { font-weight: 400; font-size: 0.8rem; color: #1a1a1a; }
-    .prediction-item .main .conf { color: #888888; font-size: 0.6rem; font-weight: 300; }
-    .prediction-item .sub { font-size: 0.55rem; color: #22c55e; font-weight: 300; }
-    .prediction-item .alt { color: #bbbbbb; font-size: 0.6rem; }
-    .prediction-item .alt .conf-alt { color: #cccccc; font-size: 0.5rem; }
+    .extra-input {
+        margin: 0.5rem 0;
+        padding: 0.5rem;
+        border: 1px solid #eeeeee;
+        background: #fafafa;
+    }
+    
+    .prediction-item {
+        padding: 0.2rem 0;
+    }
+    .prediction-item .main {
+        font-weight: 400;
+        font-size: 0.8rem;
+        color: #1a1a1a;
+    }
+    .prediction-item .main .conf {
+        color: #888888;
+        font-size: 0.6rem;
+        font-weight: 300;
+    }
+    .prediction-item .sub {
+        font-size: 0.55rem;
+        color: #22c55e;
+        font-weight: 300;
+    }
+    .prediction-item .alt {
+        color: #bbbbbb;
+        font-size: 0.6rem;
+    }
+    .prediction-item .alt .conf-alt {
+        color: #cccccc;
+        font-size: 0.5rem;
+    }
     
     .qr-container {
         border: 1px solid #1a1a1a;
@@ -201,10 +295,30 @@ st.markdown("""
         background: #ffffff;
         margin: 1rem 0;
     }
-    .qr-container img { max-width: 180px; height: auto; }
-    .qr-container .qr-amount { font-size: 1.2rem; font-weight: 300; color: #22c55e; margin: 0.3rem 0; }
-    .qr-container .qr-bank { font-size: 0.55rem; color: #666666; font-weight: 300; letter-spacing: 1px; }
-    .qr-container .qr-label { font-size: 0.5rem; color: #999999; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; margin-top: 0.2rem; }
+    .qr-container img {
+        max-width: 180px;
+        height: auto;
+    }
+    .qr-container .qr-amount {
+        font-size: 1.2rem;
+        font-weight: 300;
+        color: #22c55e;
+        margin: 0.3rem 0;
+    }
+    .qr-container .qr-bank {
+        font-size: 0.55rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 1px;
+    }
+    .qr-container .qr-label {
+        font-size: 0.5rem;
+        color: #999999;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 0.2rem;
+    }
     
     .camera-container {
         border: 1px solid #1a1a1a;
@@ -213,16 +327,42 @@ st.markdown("""
         background: #fafafa;
         margin: 1rem 0;
     }
-    .camera-container .camera-label { font-size: 0.55rem; color: #666666; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; }
+    .camera-container .camera-label {
+        font-size: 0.55rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
     
-    ::-webkit-scrollbar { width: 4px; background: #f7f7f7; }
-    ::-webkit-scrollbar-thumb { background: #1a1a1a; }
-    ::-webkit-scrollbar-thumb:hover { background: #333333; }
+    ::-webkit-scrollbar {
+        width: 4px;
+        background: #f7f7f7;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #1a1a1a;
+    }
     
-    hr { border: none; border-top: 1px solid #f0f0f0; margin: 1rem 0; }
+    .css-1d391kg {
+        background-color: #ffffff !important;
+        border-right: 1px solid #eeeeee !important;
+    }
+    .css-1d391kg .stMarkdown {
+        color: #333333 !important;
+    }
+    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
+        color: #1a1a1a !important;
+        font-weight: 300 !important;
+        letter-spacing: 3px !important;
+        font-size: 0.7rem !important;
+        text-transform: uppercase !important;
+    }
     
-    .stFileUploader { background: #ffffff !important; border: 1px dashed #cccccc !important; border-radius: 0px !important; }
-    .stFileUploader:hover { border-color: #1a1a1a !important; border-style: solid !important; }
+    hr {
+        border: none;
+        border-top: 1px solid #eeeeee;
+        margin: 1rem 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -230,10 +370,16 @@ st.markdown("""
 def check_model_files():
     model_files = []
     possible_names = ['food_model.onnx', 'model.onnx', 'trainaicuoiky1.onnx']
+    
     for name in possible_names:
         if os.path.exists(name):
             size = os.path.getsize(name) / (1024*1024)
-            model_files.append({'name': name, 'size': size, 'path': os.path.abspath(name)})
+            model_files.append({
+                'name': name,
+                'size': size,
+                'path': os.path.abspath(name)
+            })
+    
     return model_files
 
 
@@ -242,15 +388,19 @@ def load_model():
     model_files = check_model_files()
     if not model_files:
         return None
+    
     onnx_files = [f for f in model_files if f['name'] == 'food_model.onnx']
     if not onnx_files:
         onnx_files = [f for f in model_files if f['name'].endswith('.onnx')]
+    
     if onnx_files:
         chosen = onnx_files[0]
         try:
-            return ort.InferenceSession(chosen['path'])
+            session = ort.InferenceSession(chosen['path'])
+            return session
         except Exception:
             return None
+    
     return None
 
 
@@ -260,9 +410,9 @@ def render_status_dot(ready):
 
 
 st.markdown("""
-<div class="main-header">
-    <h1>Food Image Recognizing</h1>
-    <p>CNN-based meal recognition · Automated billing system</p>
+<div class="header">
+    <h1>FOOD IMAGE RECOGNIZING</h1>
+    <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -292,25 +442,24 @@ with st.sidebar:
     
     model_files = check_model_files()
     model_ready = len(model_files) > 0
-    status_html = render_status_dot(model_ready)
     
+    status_html = render_status_dot(model_ready)
     if model_ready:
-        st.markdown(f'{status_html} **Model Ready**', unsafe_allow_html=True)
+        st.markdown(f'{status_html} **MODEL READY**', unsafe_allow_html=True)
         for mf in model_files:
             st.markdown(f'<div class="model-info">▸ {mf["name"]} ({mf["size"]:.1f} MB)</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'{status_html} **Model Not Found**', unsafe_allow_html=True)
+        st.markdown(f'{status_html} **MODEL NOT FOUND**', unsafe_allow_html=True)
         st.markdown('<div class="model-info">Upload food_model.onnx</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown(f'<div class="model-info">{datetime.now().strftime("%Y-%m-%d %H:%M")}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="model-info">10 food classes</div>', unsafe_allow_html=True)
 
 
 col_left, col_right = st.columns([2.5, 1.5])
 
 with col_left:
-    st.markdown("### Capture")
+    st.markdown("### Camera")
     st.markdown("---")
     
     camera_image = st.camera_input("Take a photo", key="camera")
@@ -319,9 +468,10 @@ with col_left:
         image = load_image(camera_image)
         st.image(image, caption="Captured Image", use_column_width=True)
         
-        if st.button("Recognize", use_container_width=True, type="primary"):
+        if st.button("Recognize", use_container_width=True):
             with st.spinner("Processing..."):
                 session = load_model()
+                
                 if session is None:
                     st.error("Model not found")
                 else:
@@ -330,7 +480,7 @@ with col_left:
                     st.session_state['processed'] = True
                     st.rerun()
     else:
-        st.info("Click the camera button above to capture an image")
+        st.info("Click the camera button above to take a photo")
         st.markdown('<div class="camera-container"><div class="camera-label">Ready to capture</div></div>', unsafe_allow_html=True)
 
 
@@ -348,6 +498,7 @@ with col_right:
         if cropped_results:
             img_with_boxes = draw_boxes_fixed(img_resized, cropped_results)
             st.image(img_with_boxes, caption="Detected Trays", use_column_width=True)
+            
             st.success(f"{len(cropped_results)} tray(s) detected")
             
             detected_foods = []
@@ -358,7 +509,7 @@ with col_right:
                 cropped_img = result["image"]
                 khay_id = result["id"]
                 
-                with st.expander(f"Tray {khay_id}", expanded=(idx == 0)):
+                with st.expander(f"TRAY {khay_id}", expanded=(idx == 0)):
                     col_img, col_info = st.columns([1, 1.5])
                     
                     with col_img:
@@ -374,8 +525,10 @@ with col_right:
                     with col_info:
                         try:
                             preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
+                            
                             input_name = session.get_inputs()[0].name
                             output_name = session.get_outputs()[0].name
+                            
                             result_onnx = session.run([output_name], {input_name: preprocessed})
                             predictions = result_onnx[0][0]
                             
@@ -483,12 +636,13 @@ with col_right:
             st.rerun()
     
     else:
-        st.info("Capture an image and click Recognize")
-        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;margin-top:0.5rem;">▸ Camera capture · Automatic segmentation</div>', unsafe_allow_html=True)
+        st.info("Take a photo and click RECOGNIZE")
+        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Camera capture</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Automatic segmentation</div>', unsafe_allow_html=True)
 
 
 st.markdown("""
 <div class="footer">
-    <p>Food Image Recognizing <span class="copyright">2026 &copy;</span></p>
+    <p>FOOD IMAGE RECOGNIZING <span class="copyright">2026 &copy;</span></p>
 </div>
 """, unsafe_allow_html=True)
