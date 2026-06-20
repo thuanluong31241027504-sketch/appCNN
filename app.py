@@ -28,43 +28,59 @@ st.markdown("""
     }
     
     .main {
-        background: #0a0a0a;
+        background: #f5f5f5;
     }
     
     .header {
-        background: #111111;
-        padding: 2.5rem 2rem;
-        border-radius: 0px;
+        background: #ffffff;
+        padding: 2rem 2rem;
+        border: 1px solid #000000;
         margin-bottom: 2rem;
         text-align: center;
-        border-bottom: 1px solid #1a1a1a;
     }
     .header h1 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 300;
         letter-spacing: 4px;
-        color: #00ff41;
+        color: #000000;
         margin: 0;
-        text-shadow: 0 0 20px rgba(0, 255, 65, 0.05);
     }
     .header p {
-        font-size: 0.8rem;
-        color: #555555;
+        font-size: 0.75rem;
+        color: #666666;
         margin: 0.5rem 0 0 0;
         font-weight: 300;
         letter-spacing: 2px;
     }
     
+    /* ===== MENU ===== */
+    .menu-item {
+        padding: 0.4rem 0;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 0.75rem;
+        color: #333333;
+        font-weight: 300;
+    }
+    .menu-item:hover {
+        border-bottom: 1px solid #000000;
+        padding-left: 0.5rem;
+        transition: all 0.3s;
+    }
+    .menu-price {
+        float: right;
+        color: #000000;
+        font-weight: 400;
+    }
+    
     /* ===== PUSHABLE BUTTON ===== */
     .pushable {
-        background: #1a1a1a;
+        background: transparent;
         border: none;
         padding: 0;
         cursor: pointer;
         outline-offset: 4px;
         outline: none;
         width: 100%;
-        transition: all 0.1s ease;
     }
     .pushable:focus {
         outline: none;
@@ -72,46 +88,39 @@ st.markdown("""
     .front {
         display: block;
         padding: 0.8rem 1.5rem;
-        border-radius: 0px;
-        font-size: 0.75rem;
-        font-weight: 300;
+        font-size: 0.7rem;
+        font-weight: 400;
         letter-spacing: 3px;
         text-transform: uppercase;
-        background: #1a1a1a;
-        color: #00ff41;
-        transform: translateY(-6px);
-        border: 1px solid #2a2a2a;
+        background: #ffffff;
+        color: #000000;
+        transform: translateY(-4px);
+        border: 1px solid #000000;
         transition: all 0.1s ease;
         box-shadow: 
-            0 4px 0 #0a0a0a,
-            0 8px 0 #0a0a0a,
-            0 12px 0 #0a0a0a;
-        text-shadow: 0 0 10px rgba(0, 255, 65, 0.05);
+            0 2px 0 #000000,
+            0 4px 0 #000000;
     }
     .pushable:hover .front {
-        background: #00ff41;
-        color: #0a0a0a;
-        border-color: #00ff41;
+        background: #000000;
+        color: #ffffff;
         box-shadow: 
-            0 2px 0 #0a0a0a,
-            0 4px 0 #0a0a0a,
-            0 6px 0 #0a0a0a;
-        transform: translateY(-4px);
-        text-shadow: none;
+            0 1px 0 #000000,
+            0 2px 0 #000000;
+        transform: translateY(-2px);
     }
     .pushable:active .front {
         box-shadow: 
-            0 0px 0 #0a0a0a,
-            0 0px 0 #0a0a0a,
-            0 0px 0 #0a0a0a;
+            0 0px 0 #000000,
+            0 0px 0 #000000;
         transform: translateY(0px);
     }
     .pushable:disabled .front {
         opacity: 0.3;
         box-shadow: 
-            0 2px 0 #0a0a0a,
-            0 4px 0 #0a0a0a;
-        transform: translateY(-4px);
+            0 1px 0 #000000,
+            0 2px 0 #000000;
+        transform: translateY(-2px);
         cursor: not-allowed;
     }
     
@@ -128,158 +137,160 @@ st.markdown("""
     .pushable-secondary .front-secondary {
         display: block;
         padding: 0.6rem 1.5rem;
-        border-radius: 0px;
-        font-size: 0.7rem;
+        font-size: 0.6rem;
         font-weight: 300;
         letter-spacing: 2px;
         text-transform: uppercase;
         background: transparent;
-        color: #555555;
-        transform: translateY(-4px);
-        border: 1px solid #1a1a1a;
+        color: #666666;
+        transform: translateY(-3px);
+        border: 1px solid #cccccc;
         transition: all 0.1s ease;
         box-shadow: 
-            0 2px 0 #0a0a0a,
-            0 4px 0 #0a0a0a;
+            0 1px 0 #cccccc,
+            0 2px 0 #cccccc;
     }
     .pushable-secondary:hover .front-secondary {
-        color: #00ff41;
-        border-color: #2a2a2a;
+        color: #000000;
+        border-color: #000000;
         box-shadow: 
-            0 1px 0 #0a0a0a,
-            0 2px 0 #0a0a0a;
+            0 1px 0 #000000,
+            0 2px 0 #000000;
         transform: translateY(-2px);
     }
     .pushable-secondary:active .front-secondary {
         box-shadow: 
-            0 0px 0 #0a0a0a,
-            0 0px 0 #0a0a0a;
+            0 0px 0 #000000,
+            0 0px 0 #000000;
         transform: translateY(0px);
     }
     
-    /* ===== TERMINAL STYLE ===== */
-    .terminal {
-        background: #0a0a0a;
-        border: 1px solid #1a1a1a;
-        padding: 1.5rem;
-        margin: 1rem 0;
+    /* ===== EXPANDER ===== */
+    .streamlit-expanderHeader {
+        font-family: 'JetBrains Mono', monospace !important;
+        background: #ffffff !important;
+        border: 1px solid #000000 !important;
+        border-radius: 0px !important;
+        color: #000000 !important;
+        font-size: 0.7rem !important;
+        font-weight: 300 !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
     }
-    
-    /* ===== MENU ===== */
-    .menu-item {
-        padding: 0.4rem 0;
-        border-bottom: 1px solid #111111;
-        font-size: 0.75rem;
-        color: #aaaaaa;
-        font-weight: 300;
-        transition: all 0.3s;
+    .streamlit-expanderHeader:hover {
+        background: #000000 !important;
+        color: #ffffff !important;
     }
-    .menu-item:hover {
-        color: #00ff41;
-        border-bottom: 1px solid #00ff41;
-        padding-left: 0.5rem;
-    }
-    .menu-price {
-        float: right;
-        color: #00ff41;
-        font-weight: 300;
+    .streamlit-expanderContent {
+        background: #ffffff !important;
+        border: 1px solid #000000 !important;
+        border-top: none !important;
+        border-radius: 0px !important;
+        padding: 1rem !important;
     }
     
     /* ===== TOTAL CARD ===== */
     .total-card {
-        background: #0a0a0a;
-        border: 1px solid #00ff41;
+        background: #ffffff;
+        border: 1px solid #000000;
         padding: 2rem;
         text-align: center;
         margin: 1.5rem 0;
-        position: relative;
-        overflow: hidden;
-    }
-    .total-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.03), transparent);
-        animation: scan 4s linear infinite;
-    }
-    @keyframes scan {
-        0% { left: -100%; }
-        100% { left: 100%; }
     }
     .total-card p {
-        color: #555555;
-        font-size: 0.7rem;
+        color: #666666;
+        font-size: 0.65rem;
         font-weight: 300;
         letter-spacing: 3px;
         margin: 0;
         text-transform: uppercase;
     }
     .total-card h2 {
-        color: #00ff41;
-        font-size: 2.8rem;
+        color: #000000;
+        font-size: 2.5rem;
         font-weight: 300;
         letter-spacing: 2px;
         margin: 0.5rem 0;
-        text-shadow: 0 0 30px rgba(0, 255, 65, 0.05);
     }
     .total-card .sub {
-        color: #555555;
-        font-size: 0.7rem;
+        color: #666666;
+        font-size: 0.65rem;
         font-weight: 300;
         letter-spacing: 1px;
     }
     
-    /* ===== EXPANDER ===== */
-    .streamlit-expanderHeader {
-        font-family: 'JetBrains Mono', monospace !important;
-        background: #111111 !important;
-        border: 1px solid #1a1a1a !important;
-        border-radius: 0px !important;
-        color: #aaaaaa !important;
-        font-size: 0.75rem !important;
-        font-weight: 300 !important;
-        letter-spacing: 2px !important;
-        text-transform: uppercase !important;
-    }
-    .streamlit-expanderHeader:hover {
-        border-color: #00ff41 !important;
-        color: #00ff41 !important;
-    }
-    .streamlit-expanderContent {
-        background: #0a0a0a !important;
-        border: 1px solid #1a1a1a !important;
-        border-top: none !important;
-        border-radius: 0px !important;
-        padding: 1rem !important;
-    }
-    
     /* ===== METRICS ===== */
     .stMetric {
-        background: #111111 !important;
-        border: 1px solid #1a1a1a !important;
+        background: #ffffff !important;
+        border: 1px solid #000000 !important;
         border-radius: 0px !important;
         padding: 1rem !important;
     }
     .stMetric label {
-        color: #555555 !important;
-        font-size: 0.6rem !important;
+        color: #666666 !important;
+        font-size: 0.55rem !important;
         font-weight: 300 !important;
         letter-spacing: 2px !important;
         text-transform: uppercase !important;
     }
     .stMetric .stMetricValue {
-        color: #00ff41 !important;
-        font-size: 1.5rem !important;
+        color: #000000 !important;
+        font-size: 1.3rem !important;
         font-weight: 300 !important;
+    }
+    
+    /* ===== ALERTS ===== */
+    .stAlert {
+        border-radius: 0px !important;
+        background: #f5f5f5 !important;
+        border-left: 3px solid #000000 !important;
+        color: #333333 !important;
+        font-weight: 300 !important;
+        font-size: 0.7rem !important;
+    }
+    .stAlert.success {
+        border-left-color: #000000 !important;
+    }
+    .stAlert.warning {
+        border-left-color: #000000 !important;
+    }
+    .stAlert.error {
+        border-left-color: #000000 !important;
+    }
+    
+    /* ===== BADGE ===== */
+    .badge-high {
+        color: #000000;
+        font-size: 0.6rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+        border: 1px solid #000000;
+        padding: 0.15rem 0.8rem;
+        display: inline-block;
+    }
+    .badge-medium {
+        color: #666666;
+        font-size: 0.6rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+        border: 1px solid #666666;
+        padding: 0.15rem 0.8rem;
+        display: inline-block;
+    }
+    .badge-low {
+        color: #999999;
+        font-size: 0.6rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+        border: 1px solid #999999;
+        padding: 0.15rem 0.8rem;
+        display: inline-block;
     }
     
     /* ===== IMAGE ===== */
     .stImage figcaption {
-        color: #555555 !important;
-        font-size: 0.65rem !important;
+        color: #666666 !important;
+        font-size: 0.6rem !important;
         font-weight: 300 !important;
         letter-spacing: 1px !important;
         text-align: center !important;
@@ -287,80 +298,30 @@ st.markdown("""
     
     /* ===== FILE UPLOADER ===== */
     .stFileUploader {
-        background: #111111 !important;
-        border: 1px dashed #1a1a1a !important;
+        background: #ffffff !important;
+        border: 1px dashed #000000 !important;
         border-radius: 0px !important;
         padding: 1rem !important;
     }
     .stFileUploader:hover {
-        border-color: #00ff41 !important;
+        border-style: solid !important;
     }
     .stFileUploader label {
-        color: #555555 !important;
+        color: #666666 !important;
         font-weight: 300 !important;
         letter-spacing: 1px !important;
     }
     
-    /* ===== ALERTS ===== */
-    .stAlert {
-        border-radius: 0px !important;
-        background: #111111 !important;
-        border-left: 3px solid #00ff41 !important;
-        color: #aaaaaa !important;
-        font-weight: 300 !important;
-        font-size: 0.75rem !important;
-    }
-    .stAlert svg {
-        fill: #00ff41 !important;
-    }
-    .stAlert.warning {
-        border-left-color: #ff6b35 !important;
-    }
-    .stAlert.error {
-        border-left-color: #ff1744 !important;
-    }
-    .stAlert.success {
-        border-left-color: #00e676 !important;
-    }
-    
-    /* ===== BADGE ===== */
-    .badge-high {
-        color: #00e676;
-        font-size: 0.65rem;
-        font-weight: 300;
-        letter-spacing: 1px;
-        border: 1px solid #00e676;
-        padding: 0.2rem 0.8rem;
-        display: inline-block;
-    }
-    .badge-medium {
-        color: #ffab00;
-        font-size: 0.65rem;
-        font-weight: 300;
-        letter-spacing: 1px;
-        border: 1px solid #ffab00;
-        padding: 0.2rem 0.8rem;
-        display: inline-block;
-    }
-    .badge-low {
-        color: #ff1744;
-        font-size: 0.65rem;
-        font-weight: 300;
-        letter-spacing: 1px;
-        border: 1px solid #ff1744;
-        padding: 0.2rem 0.8rem;
-        display: inline-block;
-    }
-    
     /* ===== SIDEBAR ===== */
     .css-1d391kg {
-        background-color: #0a0a0a !important;
+        background-color: #ffffff !important;
+        border-right: 1px solid #000000 !important;
     }
     .css-1d391kg .stMarkdown {
-        color: #aaaaaa !important;
+        color: #333333 !important;
     }
     .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
-        color: #00ff41 !important;
+        color: #000000 !important;
         font-weight: 300 !important;
         letter-spacing: 2px !important;
     }
@@ -368,7 +329,7 @@ st.markdown("""
     /* ===== DIVIDER ===== */
     hr {
         border: none;
-        border-top: 1px solid #1a1a1a;
+        border-top: 1px solid #000000;
         margin: 1.5rem 0;
     }
     
@@ -376,28 +337,20 @@ st.markdown("""
     .footer {
         text-align: center;
         padding: 2rem 0 1rem 0;
-        color: #1a1a1a;
-        font-size: 0.6rem;
-        border-top: 1px solid #111111;
+        color: #cccccc;
+        font-size: 0.55rem;
+        border-top: 1px solid #000000;
         margin-top: 2rem;
         letter-spacing: 2px;
-    }
-    
-    /* ===== SPINNER ===== */
-    .stSpinner {
-        border-color: #00ff41 !important;
     }
     
     /* ===== SCROLLBAR ===== */
     ::-webkit-scrollbar {
         width: 4px;
-        background: #0a0a0a;
+        background: #f5f5f5;
     }
     ::-webkit-scrollbar-thumb {
-        background: #1a1a1a;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #00ff41;
+        background: #000000;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -437,20 +390,10 @@ def load_model():
     return None
 
 
-def render_pushable_button(label, key, disabled=False):
-    """Render pushable 3D button"""
-    disabled_attr = "disabled" if disabled else ""
-    return f"""
-    <button class="pushable" id="{key}" {disabled_attr}>
-        <span class="front">{label}</span>
-    </button>
-    """
-
-
 st.markdown("""
 <div class="header">
     <h1>FOOD DETECTION SYSTEM</h1>
-    <p>▸ AUTOMATED MEAL RECOGNITION &amp; BILLING ▸ v2.0</p>
+    <p>AUTOMATED MEAL RECOGNITION &amp; BILLING</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -482,12 +425,12 @@ with st.sidebar:
     if model_files:
         st.success("MODEL READY")
         for mf in model_files:
-            st.caption(f"▸ {mf['name']} ({mf['size']:.1f} MB)")
+            st.caption(f"{mf['name']} ({mf['size']:.1f} MB)")
     else:
         st.error("MODEL NOT FOUND")
     
     st.markdown("---")
-    st.caption(f"▸ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    st.caption(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 
 col_left, col_right = st.columns([2.5, 1.5])
@@ -532,7 +475,7 @@ with col_right:
             img_with_boxes = draw_boxes_fixed(img_resized, cropped_results)
             st.image(img_with_boxes, caption="DETECTED", use_column_width=True)
             
-            st.info(f"{len(cropped_results)} trays detected")
+            st.success(f"{len(cropped_results)} trays detected")
             
             detected_foods = []
             food_details = []
@@ -645,12 +588,11 @@ with col_right:
     
     else:
         st.info("Upload image and click Recognize")
-        st.caption("▸ automatic segmentation ▸ real-time inference")
+        st.caption("Automatic segmentation · Real-time inference")
 
 
 st.markdown("""
 <div class="footer">
-    <p>FOOD DETECTION SYSTEM v2.0 &middot; ONNX RUNTIME &middot; 10 FOOD CLASSES</p>
-    <p style="color: #1a1a1a;">▸ ▸ ▸</p>
+    <p>FOOD DETECTION SYSTEM v2.0 · ONNX RUNTIME · 10 FOOD CLASSES</p>
 </div>
 """, unsafe_allow_html=True)
