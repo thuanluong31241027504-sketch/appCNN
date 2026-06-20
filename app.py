@@ -22,15 +22,13 @@ st.set_page_config(
 )
 
 
-def generate_qr_code(amount, bank_id="0393167129", bank_name="MB BANK", account_name="LUONG NGOC THUAN"):
-    """Generate QR code for bank transfer"""
+def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name="LUONG NGOC THUAN"):
+    """Generate QR code for bank transfer using VietQR"""
     # VietQR format
-    qr_data = f"""
-    https://img.vietqr.io/image/MB-{bank_id}-compact.png?amount={amount}&addInfo=THANHTOAN
-    """
+    qr_data = f"https://img.vietqr.io/image/{bank_name}-{bank_id}-compact.png?amount={amount}&addInfo=THANHTOAN"
     
     qr = qrcode.QRCode(version=1, box_size=4, border=2)
-    qr.add_data(qr_data.strip())
+    qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     
@@ -267,34 +265,33 @@ st.markdown("""
         margin-top: 0.1rem;
     }
     
-    /* ===== QR CODE ===== */
     .qr-container {
         border: 1px solid #000000;
-        padding: 1rem;
+        padding: 0.8rem;
         text-align: center;
         background: #ffffff;
-        margin: 0.8rem 0;
+        margin: 0.5rem 0;
     }
     .qr-container img {
-        max-width: 150px;
+        max-width: 130px;
         height: auto;
     }
     .qr-container .qr-label {
-        font-size: 0.5rem;
+        font-size: 0.45rem;
         color: #666666;
         font-weight: 300;
         letter-spacing: 2px;
         text-transform: uppercase;
-        margin-top: 0.3rem;
+        margin-top: 0.2rem;
     }
     .qr-container .qr-amount {
-        font-size: 1.2rem;
+        font-size: 1rem;
         font-weight: 300;
         color: #000000;
-        margin: 0.2rem 0;
+        margin: 0.15rem 0;
     }
     .qr-container .qr-bank {
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         color: #666666;
         font-weight: 300;
         letter-spacing: 1px;
@@ -585,7 +582,6 @@ with col_right:
             if detected_foods:
                 total_price, details = calculate_total(detected_foods)
                 
-                # ===== SUMMARY GRID =====
                 st.markdown("""
                 <div class="summary-grid">
                     <div class="summary-item">
@@ -607,7 +603,6 @@ with col_right:
                     total_price
                 ), unsafe_allow_html=True)
                 
-                # ===== INVOICE =====
                 with st.expander("INVOICE DETAILS", expanded=True):
                     invoice_html = ""
                     for i, detail in enumerate(details):
@@ -642,17 +637,19 @@ with col_right:
                             mime="text/plain"
                         )
                     
-                    # ===== QR CODE PAYMENT =====
                     with col_dl2:
-                        qr_img = generate_qr_code(total_price)
-                        st.markdown(f"""
-                        <div class="qr-container">
-                            <img src="{qr_img}" alt="QR Code">
-                            <div class="qr-amount">{total_price:,} VND</div>
-                            <div class="qr-bank">MB BANK · 0393167129</div>
-                            <div class="qr-label">LUONG NGOC THUAN</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        try:
+                            qr_img = generate_qr_code(total_price)
+                            st.markdown(f"""
+                            <div class="qr-container">
+                                <img src="{qr_img}" alt="QR Code">
+                                <div class="qr-amount">{total_price:,} VND</div>
+                                <div class="qr-bank">MB BANK · 0393167129</div>
+                                <div class="qr-label">LUONG NGOC THUAN</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        except Exception as e:
+                            st.caption("QR generation error")
             
         else:
             st.warning("No trays detected")
