@@ -206,7 +206,7 @@ with col_right:
             detected_foods = []
             food_details = []
             for idx, result in enumerate(cropped_results):
-                cropped_img = result["image_enhanced"]  # Dùng ảnh đã tăng cường
+                cropped_img = result["image"]
                 khay_id = result["id"]
                 with st.expander(f"TRAY {khay_id}", expanded=(idx == 0)):
                     col_img, col_info = st.columns([1, 1.5])
