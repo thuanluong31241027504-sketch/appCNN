@@ -114,7 +114,7 @@ with col1:
 with col2:
     st.subheader("Ket qua nhan dien")
     
-    if 'processed' in st.session_state and st_session_state['processed']:
+    if 'processed' in st.session_state and st.session_state['processed']:
         image = st.session_state['image']
         session = st.session_state['session']
         
