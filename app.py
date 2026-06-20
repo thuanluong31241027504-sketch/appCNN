@@ -76,11 +76,11 @@ with st.sidebar:
     
     # Thông tin vị trí khay
     st.header("Vi tri khay")
-    st.text("Khay 1: Goc trai tren")
-    st.text("Khay 2: Goc phai tren")
-    st.text("Khay 3: Goc trai duoi")
-    st.text("Khay 4: Giua duoi")
-    st.text("Khay 5: Goc phai duoi")
+    st.text("Khay 1: Canh rau (Trai tren)")
+    st.text("Khay 2: Com trang (Phai tren)")
+    st.text("Khay 3: Rau song (Trai duoi)")
+    st.text("Khay 4: Ca kho (Giua duoi)")
+    st.text("Khay 5: Thit kho (Phai duoi)")
     
     st.markdown("---")
     
@@ -111,7 +111,7 @@ with col1:
         image = load_image(uploaded_file)
         
         # Hiển thị ảnh gốc
-        st.image(image, caption="Anh da tai len", use_column_width=True)
+        st.image(image, caption="Anh goc", use_column_width=True)
         
         # Nút xử lý
         if st.button("Nhan dien mon an", type="primary"):
@@ -133,13 +133,17 @@ with col2:
         image = st.session_state['image']
         session = st.session_state['session']
         
-        # CẮT ẢNH THEO TỌA ĐỘ CỐ ĐỊNH
+        # CẮT ẢNH THEO TỌA ĐỘ CỐ ĐỊNH (RESIZE 1400x1300)
         with st.spinner("Dang cat anh thanh cac khay..."):
-            cropped_results = crop_food_items(image)
+            cropped_results, img_resized = crop_food_items(image)
         
-        # Hiển thị ảnh có bounding boxes
+        # Hiển thị ảnh đã resize và có bounding boxes
         if cropped_results:
-            img_with_boxes = draw_boxes_fixed(image, cropped_results)
+            # Hiển thị ảnh đã resize
+            st.image(img_resized, caption="Anh sau khi resize 1400x1300", use_column_width=True)
+            
+            # Hiển thị ảnh có bounding boxes
+            img_with_boxes = draw_boxes_fixed(img_resized, cropped_results)
             st.image(img_with_boxes, caption="Da cat cac khay", use_column_width=True)
             
             st.success(f"Da cat thanh {len(cropped_results)} khay")
@@ -152,7 +156,7 @@ with col2:
                 khay_id = result["id"]
                 khay_name = result["name"]
                 
-                st.markdown(f"**{khay_name} (Khay {khay_id}):**")
+                st.markdown(f"**{khay_name}**")
                 
                 col_img, col_info = st.columns([1, 2])
                 
@@ -160,7 +164,7 @@ with col2:
                     try:
                         # Hiển thị ảnh đã cắt
                         if cropped_img.shape[0] > 0 and cropped_img.shape[1] > 0:
-                            # Resize để hiển thị
+                            # Resize để hiển thị vừa
                             h, w = cropped_img.shape[:2]
                             if h > 200 or w > 200:
                                 scale = min(200/h, 200/w)
