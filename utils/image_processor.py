@@ -9,134 +9,99 @@ def load_image(image_file):
 
 def preprocess_image(image, target_size=(224, 224)):
     """Tiền xử lý ảnh cho model ONNX"""
-    # Chuyển đổi sang RGB nếu cần
     if len(image.shape) == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     elif image.shape[2] == 4:
         image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
     
-    # Resize ảnh
     img_resized = cv2.resize(image, target_size)
-    
-    # Chuẩn hóa
     img_normalized = img_resized.astype(np.float32) / 255.0
-    
-    # Thêm batch dimension
     img_batch = np.expand_dims(img_normalized, axis=0)
     
     return img_batch
 
-def detect_food_boxes_advanced(image):
+def crop_food_items_fixed(image):
     """
-    Phát hiện các khay thức ăn trong ảnh - CẢI TIẾN
-    Sử dụng nhiều phương pháp để tìm khay thức ăn
+    Cắt ảnh theo tọa độ cố định cho từng vị trí khay
     """
-    # Chuyển sang grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    # Định nghĩa các vùng cắt theo tọa độ [y1:y2, x1:x2]
+    # Dựa trên thông số từ ảnh mẫu
+    regions = [
+        {
+            "id": 1,
+            "name": "Khay 1",
+            "bbox": (40, 40, 760, 660),  # (x1, y1, x2, y2) 
+            "y1": 40, "y2": 700,
+            "x1": 40, "x2": 760
+        },
+        {
+            "id": 2,
+            "name": "Khay 2",
+            "bbox": (820, 40, 1380, 660),
+            "y1": 40, "y2": 700,
+            "x1": 820, "x2": 1380
+        },
+        {
+            "id": 3,
+            "name": "Khay 3",
+            "bbox": (30, 760, 500, 1280),
+            "y1": 760, "y2": 1280,
+            "x1": 30, "x2": 500
+        },
+        {
+            "id": 4,
+            "name": "Khay 4",
+            "bbox": (520, 760, 920, 1280),
+            "y1": 760, "y2": 1280,
+            "x1": 520, "x2": 920
+        },
+        {
+            "id": 5,
+            "name": "Khay 5",
+            "bbox": (950, 760, 1380, 1280),
+            "y1": 760, "y2": 1280,
+            "x1": 950, "x2": 1380
+        }
+    ]
     
-    # Áp dụng các phương pháp khác nhau
-    boxes = []
+    cropped_results = []
     
-    # PHƯƠNG PHÁP 1: Canny Edge Detection
-    edges = cv2.Canny(gray, 30, 150)
-    contours1, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    # PHƯƠNG PHÁP 2: Threshold
-    _, thresh = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
-    contours2, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    # PHƯƠNG PHÁP 3: Adaptive Threshold
-    thresh_adapt = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-                                         cv2.THRESH_BINARY, 11, 2)
-    contours3, _ = cv2.findContours(thresh_adapt, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    # PHƯƠNG PHÁP 4: Phát hiện hình chữ nhật
-    # Tìm các hình chữ nhật trong ảnh
-    rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    morph = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, rect_kernel)
-    _, thresh_rect = cv2.threshold(morph, 50, 255, cv2.THRESH_BINARY)
-    contours4, _ = cv2.findContours(thresh_rect, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    # Gộp tất cả contours
-    all_contours = []
-    all_contours.extend(contours1)
-    all_contours.extend(contours2)
-    all_contours.extend(contours3)
-    all_contours.extend(contours4)
-    
-    # Lọc và hợp nhất các contours
-    min_area = 2000  # Giảm ngưỡng để bắt được nhiều hơn
-    max_area = image.shape[0] * image.shape[1] * 0.5  # Không quá 50% ảnh
-    
-    # Lọc contours theo diện tích
-    filtered_contours = []
-    for contour in all_contours:
-        area = cv2.contourArea(contour)
-        if min_area < area < max_area:
-            # Kiểm tra tỉ lệ khung hình (gần hình chữ nhật)
-            x, y, w, h = cv2.boundingRect(contour)
-            aspect_ratio = w / h
-            if 0.3 < aspect_ratio < 3.0:  # Tỉ lệ hợp lý
-                filtered_contours.append(contour)
-    
-    # Hợp nhất các contours gần nhau
-    merged_boxes = []
-    used = [False] * len(filtered_contours)
-    
-    for i, contour1 in enumerate(filtered_contours):
-        if used[i]:
-            continue
+    for region in regions:
+        # Cắt ảnh theo tọa độ
+        y1, y2 = region["y1"], region["y2"]
+        x1, x2 = region["x1"], region["x2"]
         
-        x1, y1, w1, h1 = cv2.boundingRect(contour1)
-        merged_x, merged_y, merged_w, merged_h = x1, y1, w1, h1
-        
-        for j, contour2 in enumerate(filtered_contours[i+1:], i+1):
-            if used[j]:
-                continue
+        # Kiểm tra tọa độ hợp lệ
+        if y1 < image.shape[0] and y2 <= image.shape[0] and \
+           x1 < image.shape[1] and x2 <= image.shape[1]:
             
-            x2, y2, w2, h2 = cv2.boundingRect(contour2)
+            cropped_img = image[y1:y2, x1:x2]
             
-            # Kiểm tra khoảng cách giữa 2 box
-            if (abs(x1 - x2) < 50 and abs(y1 - y2) < 50) or \
-               (abs((x1 + w1) - (x2 + w2)) < 50 and abs((y1 + h1) - (y2 + h2)) < 50):
-                # Hợp nhất
-                merged_x = min(merged_x, x2)
-                merged_y = min(merged_y, y2)
-                merged_w = max(merged_x + merged_w, x2 + w2) - merged_x
-                merged_h = max(merged_y + merged_h, y2 + h2) - merged_y
-                used[j] = True
-        
-        used[i] = True
-        merged_boxes.append((merged_x, merged_y, merged_w, merged_h))
+            # Kiểm tra ảnh cắt có rỗng không
+            if cropped_img.shape[0] > 0 and cropped_img.shape[1] > 0:
+                cropped_results.append({
+                    "id": region["id"],
+                    "name": region["name"],
+                    "image": cropped_img,
+                    "bbox": (x1, y1, x2 - x1, y2 - y1)
+                })
     
-    # Tạo danh sách các vùng ảnh đã cắt
-    food_boxes = []
-    for (x, y, w, h) in merged_boxes:
-        # Thêm padding để không bị cắt mất viền
-        pad = 5
-        x = max(0, x - pad)
-        y = max(0, y - pad)
-        w = min(image.shape[1] - x, w + 2*pad)
-        h = min(image.shape[0] - y, h + 2*pad)
-        
-        # Cắt vùng ảnh
-        food_region = image[y:y+h, x:x+w]
-        
-        # Kiểm tra vùng ảnh có đủ lớn không
-        if food_region.shape[0] > 20 and food_region.shape[1] > 20:
-            food_boxes.append({
-                "bbox": (x, y, w, h),
-                "image": food_region,
-                "area": w * h
-            })
-    
-    # Sắp xếp theo vị trí từ trái sang phải
-    food_boxes.sort(key=lambda box: box["bbox"][0])
-    
-    return food_boxes
+    return cropped_results
 
 def crop_food_items(image):
-    """Cắt từng món ăn từ ảnh gốc"""
-    boxes = detect_food_boxes_advanced(image)
-    cropped_images = [box["image"] for box in boxes]
-    return cropped_images, boxes
+    """Wrapper function cho tương thích với code cũ"""
+    return crop_food_items_fixed(image)
+
+def draw_boxes_fixed(image, cropped_results):
+    """Vẽ bounding boxes lên ảnh theo tọa độ cố định"""
+    img_copy = image.copy()
+    
+    for result in cropped_results:
+        x1, y1, w, h = result["bbox"]
+        # Vẽ box màu xanh
+        cv2.rectangle(img_copy, (x1, y1), (x1 + w, y1 + h), (0, 255, 0), 2)
+        # Thêm số thứ tự
+        cv2.putText(img_copy, str(result["id"]), (x1 + 5, y1 + 25),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    
+    return img_copy
