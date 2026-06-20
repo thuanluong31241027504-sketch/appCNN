@@ -5,6 +5,9 @@ import os
 import sys
 import onnxruntime as ort
 from datetime import datetime
+import qrcode
+from io import BytesIO
+import base64
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -19,6 +22,25 @@ st.set_page_config(
 )
 
 
+def generate_qr_code(amount, bank_id="0393167129", bank_name="MB BANK", account_name="LUONG NGOC THUAN"):
+    """Generate QR code for bank transfer"""
+    # VietQR format
+    qr_data = f"""
+    https://img.vietqr.io/image/MB-{bank_id}-compact.png?amount={amount}&addInfo=THANHTOAN
+    """
+    
+    qr = qrcode.QRCode(version=1, box_size=4, border=2)
+    qr.add_data(qr_data.strip())
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    
+    return f"data:image/png;base64,{img_str}"
+
+
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
@@ -29,30 +51,30 @@ st.markdown("""
     
     .header {
         background: #ffffff;
-        padding: 1.5rem 2rem;
+        padding: 1.2rem 2rem;
         border: 1px solid #000000;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         text-align: center;
     }
     .header h1 {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
         font-weight: 300;
         letter-spacing: 4px;
         color: #000000;
         margin: 0;
     }
     .header p {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
         color: #666666;
-        margin: 0.3rem 0 0 0;
+        margin: 0.2rem 0 0 0;
         font-weight: 300;
         letter-spacing: 2px;
     }
     
     .menu-item {
-        padding: 0.3rem 0;
+        padding: 0.25rem 0;
         border-bottom: 1px solid #e0e0e0;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         color: #333333;
         font-weight: 300;
     }
@@ -67,7 +89,6 @@ st.markdown("""
         font-weight: 400;
     }
     
-    /* ===== PUSHABLE BUTTON ===== */
     .pushable {
         background: transparent;
         border: none;
@@ -82,8 +103,8 @@ st.markdown("""
     }
     .front {
         display: block;
-        padding: 0.7rem 1.5rem;
-        font-size: 0.65rem;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.6rem;
         font-weight: 400;
         letter-spacing: 3px;
         text-transform: uppercase;
@@ -116,8 +137,8 @@ st.markdown("""
     }
     .pushable-secondary .front-secondary {
         display: block;
-        padding: 0.5rem 1.5rem;
-        font-size: 0.55rem;
+        padding: 0.4rem 1.5rem;
+        font-size: 0.5rem;
         font-weight: 300;
         letter-spacing: 2px;
         text-transform: uppercase;
@@ -145,7 +166,7 @@ st.markdown("""
         border: 1px solid #000000 !important;
         border-radius: 0px !important;
         color: #000000 !important;
-        font-size: 0.65rem !important;
+        font-size: 0.6rem !important;
         font-weight: 300 !important;
         letter-spacing: 2px !important;
         text-transform: uppercase !important;
@@ -159,49 +180,48 @@ st.markdown("""
         border: 1px solid #000000 !important;
         border-top: none !important;
         border-radius: 0px !important;
-        padding: 1rem !important;
+        padding: 0.8rem !important;
     }
     
-    /* ===== TOTAL CARD ===== */
     .total-card {
         background: #ffffff;
         border: 1px solid #000000;
-        padding: 1.5rem;
+        padding: 1.2rem;
         text-align: center;
-        margin: 1rem 0;
+        margin: 0.8rem 0;
     }
     .total-card .label {
         color: #666666;
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 300;
         letter-spacing: 3px;
         text-transform: uppercase;
     }
     .total-card .amount {
         color: #000000;
-        font-size: 2.2rem;
+        font-size: 2rem;
         font-weight: 300;
         letter-spacing: 2px;
-        margin: 0.3rem 0;
+        margin: 0.2rem 0;
     }
     .total-card .summary {
         color: #666666;
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 300;
         letter-spacing: 1px;
     }
     
-    /* ===== INVOICE ROW ===== */
     .invoice-row {
         display: flex;
         justify-content: space-between;
-        padding: 0.4rem 0;
+        padding: 0.3rem 0;
         border-bottom: 1px solid #f0f0f0;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         color: #333333;
     }
     .invoice-row .tray {
         font-weight: 300;
+        color: #666666;
     }
     .invoice-row .item-name {
         font-weight: 400;
@@ -213,39 +233,71 @@ st.markdown("""
     .invoice-total {
         display: flex;
         justify-content: space-between;
-        padding: 0.6rem 0;
+        padding: 0.5rem 0;
         border-top: 2px solid #000000;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: #000000;
-        margin-top: 0.5rem;
+        margin-top: 0.3rem;
     }
     
-    /* ===== SUMMARY GRID ===== */
     .summary-grid {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         gap: 0.5rem;
-        margin: 1rem 0;
+        margin: 0.8rem 0;
     }
     .summary-item {
         border: 1px solid #000000;
-        padding: 0.8rem;
+        padding: 0.6rem;
         text-align: center;
         background: #ffffff;
     }
     .summary-item .value {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         font-weight: 300;
         color: #000000;
     }
     .summary-item .desc {
+        font-size: 0.45rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 0.1rem;
+    }
+    
+    /* ===== QR CODE ===== */
+    .qr-container {
+        border: 1px solid #000000;
+        padding: 1rem;
+        text-align: center;
+        background: #ffffff;
+        margin: 0.8rem 0;
+    }
+    .qr-container img {
+        max-width: 150px;
+        height: auto;
+    }
+    .qr-container .qr-label {
         font-size: 0.5rem;
         color: #666666;
         font-weight: 300;
         letter-spacing: 2px;
         text-transform: uppercase;
-        margin-top: 0.2rem;
+        margin-top: 0.3rem;
+    }
+    .qr-container .qr-amount {
+        font-size: 1.2rem;
+        font-weight: 300;
+        color: #000000;
+        margin: 0.2rem 0;
+    }
+    .qr-container .qr-bank {
+        font-size: 0.55rem;
+        color: #666666;
+        font-weight: 300;
+        letter-spacing: 1px;
     }
     
     .stAlert {
@@ -254,12 +306,12 @@ st.markdown("""
         border-left: 3px solid #000000 !important;
         color: #333333 !important;
         font-weight: 300 !important;
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
     }
     
     .badge-high {
         color: #000000;
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         font-weight: 400;
         letter-spacing: 1px;
         border: 1px solid #000000;
@@ -268,7 +320,7 @@ st.markdown("""
     }
     .badge-medium {
         color: #666666;
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         font-weight: 400;
         letter-spacing: 1px;
         border: 1px solid #666666;
@@ -277,7 +329,7 @@ st.markdown("""
     }
     .badge-low {
         color: #999999;
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         font-weight: 400;
         letter-spacing: 1px;
         border: 1px solid #999999;
@@ -287,7 +339,7 @@ st.markdown("""
     
     .stImage figcaption {
         color: #666666 !important;
-        font-size: 0.55rem !important;
+        font-size: 0.5rem !important;
         font-weight: 300 !important;
         letter-spacing: 1px !important;
         text-align: center !important;
@@ -297,7 +349,7 @@ st.markdown("""
         background: #ffffff !important;
         border: 1px dashed #000000 !important;
         border-radius: 0px !important;
-        padding: 0.8rem !important;
+        padding: 0.6rem !important;
     }
     .stFileUploader:hover {
         border-style: solid !important;
@@ -306,7 +358,7 @@ st.markdown("""
         color: #666666 !important;
         font-weight: 300 !important;
         letter-spacing: 1px !important;
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
     }
     
     .css-1d391kg {
@@ -320,40 +372,31 @@ st.markdown("""
         color: #000000 !important;
         font-weight: 300 !important;
         letter-spacing: 2px !important;
+        font-size: 0.9rem !important;
     }
     
     hr {
         border: none;
         border-top: 1px solid #000000;
-        margin: 1rem 0;
+        margin: 0.8rem 0;
     }
     
     .footer {
         text-align: center;
-        padding: 1.5rem 0 0.5rem 0;
+        padding: 1rem 0 0.3rem 0;
         color: #cccccc;
-        font-size: 0.5rem;
+        font-size: 0.45rem;
         border-top: 1px solid #000000;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
         letter-spacing: 2px;
     }
     
     ::-webkit-scrollbar {
-        width: 4px;
+        width: 3px;
         background: #f5f5f5;
     }
     ::-webkit-scrollbar-thumb {
         background: #000000;
-    }
-    
-    .tray-container {
-        border: 1px solid #000000;
-        padding: 0.8rem;
-        margin: 0.5rem 0;
-        background: #fafafa;
-    }
-    .tray-container:hover {
-        background: #f0f0f0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -492,7 +535,7 @@ with col_right:
                     with col_img:
                         try:
                             h, w = cropped_img.shape[:2]
-                            scale = min(160 / h, 160 / w)
+                            scale = min(140 / h, 140 / w)
                             new_h, new_w = int(h * scale), int(w * scale)
                             img_display = cv2.resize(cropped_img, (new_w, new_h))
                             st.image(img_display, use_column_width=True)
@@ -570,7 +613,7 @@ with col_right:
                     for i, detail in enumerate(details):
                         invoice_html += f"""
                         <div class="invoice-row">
-                            <span class="tray">TRAY {i+1}</span>
+                            <span class="tray">#{i+1}</span>
                             <span class="item-name">{detail['name']}</span>
                             <span class="item-price">{detail['price']:,} VND</span>
                         </div>
@@ -590,12 +633,26 @@ with col_right:
                         invoice_text += f"Tray {i+1}: {d['name']} - {d['price']:,} VND\n"
                     invoice_text += f"{'-'*30}\nTOTAL: {total_price:,} VND"
                     
-                    st.download_button(
-                        label="DOWNLOAD INVOICE",
-                        data=invoice_text,
-                        file_name=f"invoice_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                        mime="text/plain"
-                    )
+                    col_dl1, col_dl2 = st.columns(2)
+                    with col_dl1:
+                        st.download_button(
+                            label="DOWNLOAD INVOICE",
+                            data=invoice_text,
+                            file_name=f"invoice_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                            mime="text/plain"
+                        )
+                    
+                    # ===== QR CODE PAYMENT =====
+                    with col_dl2:
+                        qr_img = generate_qr_code(total_price)
+                        st.markdown(f"""
+                        <div class="qr-container">
+                            <img src="{qr_img}" alt="QR Code">
+                            <div class="qr-amount">{total_price:,} VND</div>
+                            <div class="qr-bank">MB BANK · 0393167129</div>
+                            <div class="qr-label">LUONG NGOC THUAN</div>
+                        </div>
+                        """, unsafe_allow_html=True)
             
         else:
             st.warning("No trays detected")
