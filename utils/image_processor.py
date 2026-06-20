@@ -22,47 +22,44 @@ def preprocess_image(image, target_size=(224, 224)):
 
 def crop_food_items_fixed(image):
     """
-    Cắt ảnh theo tọa độ cố định cho từng vị trí khay
+    Cắt ảnh theo tọa độ cố định đã điều chỉnh
     Đầu tiên resize ảnh về 1400x1300
     """
     # RESIZE ẢNH VỀ 1400x1300
     img_resized = cv2.resize(image, (1400, 1300))
     
-    # Lấy kích thước
-    h, w = img_resized.shape[:2]
-    
-    # Định nghĩa các vùng cắt theo tọa độ [y1:y2, x1:x2]
-    # Dựa trên thông số từ ảnh mẫu đã resize
+    # Định nghĩa các vùng cắt theo tọa độ đã điều chỉnh
+    # Format: (y1, y2, x1, x2)
     regions = [
         {
             "id": 1,
-            "name": "Khay 1 (Canh rau)",
-            "y1": 40, "y2": 700,
-            "x1": 40, "x2": 760
+            "name": "Khay 1",
+            "y1": 0, "y2": 715,
+            "x1": 64, "x2": 687
         },
         {
             "id": 2,
-            "name": "Khay 2 (Com trang)",
-            "y1": 40, "y2": 700,
-            "x1": 820, "x2": 1380
+            "name": "Khay 2",
+            "y1": 52, "y2": 723,
+            "x1": 808, "x2": 1307
         },
         {
             "id": 3,
-            "name": "Khay 3 (Rau song)",
-            "y1": 760, "y2": 1280,
-            "x1": 30, "x2": 500
+            "name": "Khay 3",
+            "y1": 760, "y2": 1206,
+            "x1": 30, "x2": 461
         },
         {
             "id": 4,
-            "name": "Khay 4 (Ca kho)",
-            "y1": 760, "y2": 1280,
-            "x1": 520, "x2": 920
+            "name": "Khay 4",
+            "y1": 760, "y2": 1229,
+            "x1": 472, "x2": 897
         },
         {
             "id": 5,
-            "name": "Khay 5 (Thit kho)",
-            "y1": 760, "y2": 1280,
-            "x1": 950, "x2": 1380
+            "name": "Khay 5",
+            "y1": 749, "y2": 1247,
+            "x1": 892, "x2": 1315
         }
     ]
     
@@ -98,13 +95,25 @@ def draw_boxes_fixed(image, cropped_results):
     """Vẽ bounding boxes lên ảnh theo tọa độ cố định"""
     img_copy = image.copy()
     
-    for result in cropped_results:
+    # Màu sắc cho từng khay
+    colors = [
+        (0, 255, 0),    # Xanh lá - Khay 1
+        (255, 0, 0),    # Đỏ - Khay 2
+        (0, 0, 255),    # Xanh dương - Khay 3
+        (255, 255, 0),  # Vàng - Khay 4
+        (255, 0, 255)   # Tím - Khay 5
+    ]
+    
+    for idx, result in enumerate(cropped_results):
         x1, y1, w, h = result["bbox"]
-        # Vẽ box màu xanh
-        cv2.rectangle(img_copy, (x1, y1), (x1 + w, y1 + h), (0, 255, 0), 3)
+        color = colors[idx % len(colors)]
+        
+        # Vẽ box
+        cv2.rectangle(img_copy, (x1, y1), (x1 + w, y1 + h), color, 3)
+        
         # Thêm số thứ tự và tên
         label = f"Khay {result['id']}"
         cv2.putText(img_copy, label, (x1 + 5, y1 + 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
     
     return img_copy
