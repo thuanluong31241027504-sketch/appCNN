@@ -1,25 +1,18 @@
 import cv2
 import numpy as np
 from PIL import Image
-from tensorflow.keras.preprocessing import image as keras_image
 
 def load_image(image_file):
     """Đọc ảnh từ file upload"""
     img = Image.open(image_file)
     return np.array(img)
 
-def load_img_keras(img_path, target_size=(224, 224)):
-    """Load ảnh giống như trong code train (dùng Keras)"""
-    img = keras_image.load_img(img_path, target_size=target_size)
-    img_array = keras_image.img_to_array(img)
-    # KHÔNG CHIA 255 - giữ nguyên [0-255]
-    return img_array
-
 def preprocess_image(image, target_size=(224, 224)):
     """
     Tiền xử lý ảnh cho model ONNX
-    GIỐNG NHƯ CODE TRAIN: KHÔNG CHIA 255
+    KHÔNG chia 255 - giữ nguyên [0-255] như lúc train
     """
+    # Chuyển đổi sang RGB nếu cần
     if len(image.shape) == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     elif image.shape[2] == 4:
@@ -28,8 +21,7 @@ def preprocess_image(image, target_size=(224, 224)):
     # Resize ảnh
     img_resized = cv2.resize(image, target_size)
     
-    # KHÔNG CHIA 255 - giữ nguyên giá trị [0-255]
-    # Chuyển sang float32
+    # Chuyển sang float32 - KHÔNG CHIA 255
     img_array = img_resized.astype(np.float32)
     
     # Thêm batch dimension
@@ -86,6 +78,7 @@ def crop_food_items_fixed(image):
         y1, y2 = region["y1"], region["y2"]
         x1, x2 = region["x1"], region["x2"]
         
+        # Kiểm tra tọa độ hợp lệ
         if y1 < img_resized.shape[0] and y2 <= img_resized.shape[0] and \
            x1 < img_resized.shape[1] and x2 <= img_resized.shape[1]:
             
@@ -110,18 +103,21 @@ def draw_boxes_fixed(image, cropped_results):
     img_copy = image.copy()
     
     colors = [
-        (0, 255, 0),
-        (255, 0, 0),
-        (0, 0, 255),
-        (255, 255, 0),
-        (255, 0, 255)
+        (0, 255, 0),    # Xanh lá
+        (255, 0, 0),    # Đỏ
+        (0, 0, 255),    # Xanh dương
+        (255, 255, 0),  # Vàng
+        (255, 0, 255)   # Tím
     ]
     
     for idx, result in enumerate(cropped_results):
         x1, y1, w, h = result["bbox"]
         color = colors[idx % len(colors)]
         
+        # Vẽ box
         cv2.rectangle(img_copy, (x1, y1), (x1 + w, y1 + h), color, 3)
+        
+        # Thêm số thứ tự
         cv2.putText(img_copy, f"Khay {result['id']}", (x1 + 5, y1 + 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
     
