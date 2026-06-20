@@ -12,7 +12,7 @@ import base64
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from data.menu import MENU, get_food_name, get_food_price, get_food_category, has_extra_option, calculate_total
-from utils.image_processor import load_image, preprocess_image, crop_food_items, draw_boxes_fixed
+from utils.image_processor import load_image, preprocess_image, draw_boxes_fixed
 
 
 st.set_page_config(
@@ -23,37 +23,46 @@ st.set_page_config(
 
 
 def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name="LUONG NGOC THUAN"):
-    """Generate QR code for bank transfer"""
     qr_data = f"https://img.vietqr.io/image/{bank_name}-{bank_id}-compact.png?amount={amount}&addInfo=THANHTOAN"
-    
     qr = qrcode.QRCode(version=1, box_size=4, border=2)
     qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
-    
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode()
-    
     return f"data:image/png;base64,{img_str}"
+
+
+# ===== ĐỌC ẢNH HEADER =====
+header_image_base64 = None
+if os.path.exists("anh2.jpg"):
+    try:
+        with open("anh2.jpg", "rb") as f:
+            img_data = f.read()
+            header_image_base64 = base64.b64encode(img_data).decode()
+    except Exception:
+        header_image_base64 = None
 
 
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
-    
-    * {
-        font-family: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
-    }
+    * { font-family: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace; }
     
     .header {
         background: #ffffff;
         padding: 1.5rem 2rem;
         border: 1px solid #1a1a1a;
         margin-bottom: 2rem;
-        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
     }
-    .header h1 {
+    .header-content { text-align: center; }
+    .header-content h1 {
         font-size: 1.4rem;
         font-weight: 300;
         letter-spacing: 6px;
@@ -61,24 +70,29 @@ st.markdown("""
         margin: 0;
         text-transform: uppercase;
     }
-    .header p {
+    .header-content p {
         font-size: 0.6rem;
         color: #888888;
         margin: 0.4rem 0 0 0;
         font-weight: 300;
         letter-spacing: 1px;
-        text-transform: none;
     }
-    
-    .sidebar-title {
-        font-size: 0.7rem;
-        font-weight: 400;
-        letter-spacing: 4px;
-        color: #1a1a1a;
-        text-transform: uppercase;
-        margin-bottom: 0.5rem;
+    .header-image {
+        flex-shrink: 0;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #1a1a1a;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
     }
+    .header-image img { width: 100%; height: 100%; object-fit: cover; }
+    .header-image .placeholder { font-size: 0.5rem; color: #cccccc; text-align: center; }
     
+    .sidebar-title { font-size: 0.7rem; font-weight: 400; letter-spacing: 4px; color: #1a1a1a; text-transform: uppercase; margin-bottom: 0.5rem; }
     .menu-item {
         padding: 0.3rem 0;
         border-bottom: 1px solid #eeeeee;
@@ -87,15 +101,8 @@ st.markdown("""
         font-weight: 300;
         transition: all 0.2s;
     }
-    .menu-item:hover {
-        border-bottom: 1px solid #1a1a1a;
-        padding-left: 0.5rem;
-    }
-    .menu-price {
-        float: right;
-        color: #22c55e;
-        font-weight: 400;
-    }
+    .menu-item:hover { border-bottom: 1px solid #1a1a1a; padding-left: 0.5rem; }
+    .menu-price { float: right; color: #22c55e; font-weight: 400; }
     .menu-category {
         font-size: 0.55rem;
         color: #999999;
@@ -113,26 +120,9 @@ st.markdown("""
         text-align: center;
         margin: 1rem 0;
     }
-    .total-card .label {
-        color: #999999;
-        font-size: 0.5rem;
-        font-weight: 300;
-        letter-spacing: 4px;
-        text-transform: uppercase;
-    }
-    .total-card .amount {
-        color: #22c55e;
-        font-size: 2.2rem;
-        font-weight: 300;
-        letter-spacing: 3px;
-        margin: 0.3rem 0;
-    }
-    .total-card .summary {
-        color: #999999;
-        font-size: 0.55rem;
-        font-weight: 300;
-        letter-spacing: 2px;
-    }
+    .total-card .label { color: #999999; font-size: 0.5rem; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; }
+    .total-card .amount { color: #22c55e; font-size: 2.2rem; font-weight: 300; letter-spacing: 3px; margin: 0.3rem 0; }
+    .total-card .summary { color: #999999; font-size: 0.55rem; font-weight: 300; letter-spacing: 2px; }
     
     .invoice-row {
         display: flex;
@@ -142,12 +132,8 @@ st.markdown("""
         font-size: 0.65rem;
         color: #333333;
     }
-    .invoice-row:hover {
-        background: #fafafa;
-    }
-    .invoice-row .price {
-        color: #22c55e;
-    }
+    .invoice-row:hover { background: #fafafa; }
+    .invoice-row .price { color: #22c55e; }
     .invoice-total {
         display: flex;
         justify-content: space-between;
@@ -158,9 +144,7 @@ st.markdown("""
         color: #1a1a1a;
         margin-top: 0.5rem;
     }
-    .invoice-total .total-price {
-        color: #22c55e;
-    }
+    .invoice-total .total-price { color: #22c55e; }
     
     .stButton button {
         background: #ffffff;
@@ -175,10 +159,7 @@ st.markdown("""
         width: 100%;
         transition: all 0.2s ease;
     }
-    .stButton button:hover {
-        background: #1a1a1a;
-        color: #ffffff;
-    }
+    .stButton button:hover { background: #1a1a1a; color: #ffffff; }
     
     .streamlit-expanderHeader {
         background: #ffffff !important;
@@ -190,9 +171,7 @@ st.markdown("""
         letter-spacing: 3px !important;
         text-transform: uppercase !important;
     }
-    .streamlit-expanderHeader:hover {
-        background: #f7f7f7 !important;
-    }
+    .streamlit-expanderHeader:hover { background: #f7f7f7 !important; }
     .streamlit-expanderContent {
         background: #ffffff !important;
         border: 1px solid #1a1a1a !important;
@@ -201,23 +180,8 @@ st.markdown("""
         padding: 1rem !important;
     }
     
-    .stAlert {
-        border-radius: 0px !important;
-        background: #f7f7f7 !important;
-        border-left: 3px solid #1a1a1a !important;
-        color: #333333 !important;
-        font-weight: 300 !important;
-        font-size: 0.65rem !important;
-    }
-    
-    .stImage figcaption {
-        color: #999999 !important;
-        font-size: 0.5rem !important;
-        font-weight: 300 !important;
-        letter-spacing: 2px !important;
-        text-align: center !important;
-        text-transform: uppercase !important;
-    }
+    .stAlert { border-radius: 0px !important; background: #f7f7f7 !important; border-left: 3px solid #1a1a1a !important; color: #333333 !important; font-weight: 300 !important; font-size: 0.65rem !important; }
+    .stImage figcaption { color: #999999 !important; font-size: 0.5rem !important; font-weight: 300 !important; letter-spacing: 2px !important; text-align: center !important; text-transform: uppercase !important; }
     
     .footer {
         text-align: center;
@@ -228,65 +192,20 @@ st.markdown("""
         margin-top: 1.5rem;
         letter-spacing: 2px;
     }
-    .footer .copyright {
-        color: #999999;
-        font-weight: 300;
-    }
+    .footer .copyright { color: #999999; font-weight: 300; }
     
-    .status-dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        margin-right: 8px;
-    }
-    .status-dot.green {
-        background: #22c55e;
-    }
-    .status-dot.red {
-        background: #cccccc;
-    }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+    .status-dot.green { background: #22c55e; }
+    .status-dot.red { background: #cccccc; }
     
-    .model-info {
-        font-size: 0.55rem;
-        color: #888888;
-        letter-spacing: 1px;
-        padding: 0.3rem 0;
-    }
+    .model-info { font-size: 0.55rem; color: #888888; letter-spacing: 1px; padding: 0.3rem 0; }
     
-    .extra-input {
-        margin: 0.5rem 0;
-        padding: 0.5rem;
-        border: 1px solid #eeeeee;
-        background: #fafafa;
-    }
-    
-    .prediction-item {
-        padding: 0.2rem 0;
-    }
-    .prediction-item .main {
-        font-weight: 400;
-        font-size: 0.8rem;
-        color: #1a1a1a;
-    }
-    .prediction-item .main .conf {
-        color: #888888;
-        font-size: 0.6rem;
-        font-weight: 300;
-    }
-    .prediction-item .sub {
-        font-size: 0.55rem;
-        color: #22c55e;
-        font-weight: 300;
-    }
-    .prediction-item .alt {
-        color: #bbbbbb;
-        font-size: 0.6rem;
-    }
-    .prediction-item .alt .conf-alt {
-        color: #cccccc;
-        font-size: 0.5rem;
-    }
+    .prediction-item { padding: 0.2rem 0; }
+    .prediction-item .main { font-weight: 400; font-size: 0.8rem; color: #1a1a1a; }
+    .prediction-item .main .conf { color: #888888; font-size: 0.6rem; font-weight: 300; }
+    .prediction-item .sub { font-size: 0.55rem; color: #22c55e; font-weight: 300; }
+    .prediction-item .alt { color: #bbbbbb; font-size: 0.6rem; }
+    .prediction-item .alt .conf-alt { color: #cccccc; font-size: 0.5rem; }
     
     .qr-container {
         border: 1px solid #1a1a1a;
@@ -295,61 +214,31 @@ st.markdown("""
         background: #ffffff;
         margin: 1rem 0;
     }
-    .qr-container img {
-        max-width: 180px;
-        height: auto;
+    .qr-container img { max-width: 180px; height: auto; }
+    .qr-container .qr-amount { font-size: 1.2rem; font-weight: 300; color: #22c55e; margin: 0.3rem 0; }
+    .qr-container .qr-bank { font-size: 0.55rem; color: #666666; font-weight: 300; letter-spacing: 1px; }
+    .qr-container .qr-label { font-size: 0.5rem; color: #999999; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; margin-top: 0.2rem; }
+    
+    .camera-container { border: 1px solid #1a1a1a; padding: 1rem; text-align: center; background: #fafafa; margin: 1rem 0; }
+    .camera-container .camera-label { font-size: 0.55rem; color: #666666; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; }
+    
+    .adjust-container {
+        border: 1px solid #1a1a1a;
+        padding: 0.8rem;
+        background: #fafafa;
+        margin: 0.5rem 0;
     }
-    .qr-container .qr-amount {
-        font-size: 1.2rem;
-        font-weight: 300;
-        color: #22c55e;
-        margin: 0.3rem 0;
-    }
-    .qr-container .qr-bank {
-        font-size: 0.55rem;
+    .adjust-container .coord-label {
+        font-size: 0.5rem;
         color: #666666;
-        font-weight: 300;
         letter-spacing: 1px;
     }
-    .qr-container .qr-label {
-        font-size: 0.5rem;
-        color: #999999;
-        font-weight: 300;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-top: 0.2rem;
-    }
     
-    .camera-container {
-        border: 1px solid #1a1a1a;
-        padding: 1rem;
-        text-align: center;
-        background: #fafafa;
-        margin: 1rem 0;
-    }
-    .camera-container .camera-label {
-        font-size: 0.55rem;
-        color: #666666;
-        font-weight: 300;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-    }
+    ::-webkit-scrollbar { width: 4px; background: #f7f7f7; }
+    ::-webkit-scrollbar-thumb { background: #1a1a1a; }
     
-    ::-webkit-scrollbar {
-        width: 4px;
-        background: #f7f7f7;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #1a1a1a;
-    }
-    
-    .css-1d391kg {
-        background-color: #ffffff !important;
-        border-right: 1px solid #eeeeee !important;
-    }
-    .css-1d391kg .stMarkdown {
-        color: #333333 !important;
-    }
+    .css-1d391kg { background-color: #ffffff !important; border-right: 1px solid #eeeeee !important; }
+    .css-1d391kg .stMarkdown { color: #333333 !important; }
     .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
         color: #1a1a1a !important;
         font-weight: 300 !important;
@@ -358,14 +247,64 @@ st.markdown("""
         text-transform: uppercase !important;
     }
     
-    hr {
-        border: none;
-        border-top: 1px solid #eeeeee;
-        margin: 1rem 0;
-    }
+    hr { border: none; border-top: 1px solid #eeeeee; margin: 1rem 0; }
 </style>
 """, unsafe_allow_html=True)
 
+
+# ============================================
+# HÀM CẮT ẢNH THEO TỌA ĐỘ TÙY CHỈNH
+# ============================================
+
+def crop_with_custom_coords(image, coords):
+    """Cắt ảnh theo tọa độ tùy chỉnh"""
+    img_resized = cv2.resize(image, (1400, 1300))
+    
+    regions = [
+        {"id": 1, "name": "Khay 1", "y1": coords[0][0], "y2": coords[0][1], "x1": coords[0][2], "x2": coords[0][3]},
+        {"id": 2, "name": "Khay 2", "y1": coords[1][0], "y2": coords[1][1], "x1": coords[1][2], "x2": coords[1][3]},
+        {"id": 3, "name": "Khay 3", "y1": coords[2][0], "y2": coords[2][1], "x1": coords[2][2], "x2": coords[2][3]},
+        {"id": 4, "name": "Khay 4", "y1": coords[3][0], "y2": coords[3][1], "x1": coords[3][2], "x2": coords[3][3]},
+        {"id": 5, "name": "Khay 5", "y1": coords[4][0], "y2": coords[4][1], "x1": coords[4][2], "x2": coords[4][3]},
+    ]
+    
+    cropped_results = []
+    for region in regions:
+        y1, y2 = region["y1"], region["y2"]
+        x1, x2 = region["x1"], region["x2"]
+        
+        if y1 < img_resized.shape[0] and y2 <= img_resized.shape[0] and \
+           x1 < img_resized.shape[1] and x2 <= img_resized.shape[1]:
+            
+            cropped_img = img_resized[y1:y2, x1:x2]
+            if cropped_img.shape[0] > 0 and cropped_img.shape[1] > 0:
+                cropped_results.append({
+                    "id": region["id"],
+                    "name": region["name"],
+                    "image": cropped_img,
+                    "bbox": (x1, y1, x2 - x1, y2 - y1)
+                })
+    
+    return cropped_results, img_resized
+
+
+def draw_boxes_custom(image, cropped_results):
+    img_copy = image.copy()
+    colors = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
+    
+    for idx, result in enumerate(cropped_results):
+        x1, y1, w, h = result["bbox"]
+        color = colors[idx % len(colors)]
+        cv2.rectangle(img_copy, (x1, y1), (x1 + w, y1 + h), color, 3)
+        cv2.putText(img_copy, f"Khay {result['id']}", (x1 + 5, y1 + 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+    
+    return img_copy
+
+
+# ============================================
+# KIỂM TRA MODEL
+# ============================================
 
 def check_model_files():
     model_files = []
@@ -409,13 +348,38 @@ def render_status_dot(ready):
     return f'<span class="status-dot {color}"></span>'
 
 
-st.markdown("""
-<div class="header">
-    <h1>FOOD IMAGE RECOGNIZING</h1>
-    <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
-</div>
-""", unsafe_allow_html=True)
+# ============================================
+# HEADER
+# ============================================
 
+header_html = """
+<div class="header">
+    <div class="header-content">
+        <h1>FOOD IMAGE RECOGNIZING</h1>
+        <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
+    </div>
+"""
+
+if header_image_base64 is not None:
+    header_html += f"""
+    <div class="header-image">
+        <img src="data:image/jpeg;base64,{header_image_base64}" alt="Food">
+    </div>
+    """
+else:
+    header_html += """
+    <div class="header-image">
+        <span class="placeholder">No Image</span>
+    </div>
+    """
+
+header_html += "</div>"
+st.markdown(header_html, unsafe_allow_html=True)
+
+
+# ============================================
+# SIDEBAR
+# ============================================
 
 with st.sidebar:
     st.markdown('<div class="sidebar-title">Menu</div>', unsafe_allow_html=True)
@@ -456,32 +420,158 @@ with st.sidebar:
     st.markdown(f'<div class="model-info">{datetime.now().strftime("%Y-%m-%d %H:%M")}</div>', unsafe_allow_html=True)
 
 
+# ============================================
+# MAIN - ĐIỀU CHỈNH TỌA ĐỘ
+# ============================================
+
+st.markdown("### Camera & Adjust Crop")
+st.markdown("---")
+
+# Khởi tạo tọa độ mặc định
+default_coords = [
+    (0, 715, 64, 687),     # Khay 1
+    (52, 723, 808, 1307),  # Khay 2
+    (760, 1206, 30, 461),  # Khay 3
+    (760, 1229, 472, 897), # Khay 4
+    (749, 1247, 892, 1315) # Khay 5
+]
+
+# Lấy tọa độ từ session state
+if 'coords' not in st.session_state:
+    st.session_state['coords'] = default_coords.copy()
+
 col_left, col_right = st.columns([2.5, 1.5])
 
 with col_left:
-    st.markdown("### Camera")
-    st.markdown("---")
-    
+    # Camera
     camera_image = st.camera_input("Take a photo", key="camera")
     
     if camera_image is not None:
         image = load_image(camera_image)
         st.image(image, caption="Captured Image", use_column_width=True)
+        st.session_state['current_image'] = image
         
-        if st.button("Recognize", use_container_width=True):
-            with st.spinner("Processing..."):
-                session = load_model()
-                
-                if session is None:
-                    st.error("Model not found")
-                else:
-                    st.session_state['image'] = image
-                    st.session_state['session'] = session
-                    st.session_state['processed'] = True
+        # ============================================
+        # ĐIỀU CHỈNH TỌA ĐỘ
+        # ============================================
+        
+        with st.expander("Adjust Crop Coordinates", expanded=True):
+            st.markdown("### Điều chỉnh vị trí cắt cho 5 khay")
+            
+            coords = st.session_state['coords']
+            
+            # Tạo tabs cho từng khay
+            tabs = st.tabs(["Khay 1", "Khay 2", "Khay 3", "Khay 4", "Khay 5"])
+            
+            for idx, tab in enumerate(tabs):
+                with tab:
+                    khay_num = idx + 1
+                    st.markdown(f"**Khay {khay_num}**")
+                    
+                    col_y, col_x = st.columns(2)
+                    
+                    with col_y:
+                        y1 = st.slider(
+                            f"Y1 (trên)",
+                            min_value=0,
+                            max_value=1300,
+                            value=coords[idx][0],
+                            key=f"y1_{khay_num}"
+                        )
+                        y2 = st.slider(
+                            f"Y2 (dưới)",
+                            min_value=y1 + 10,
+                            max_value=1300,
+                            value=coords[idx][1],
+                            key=f"y2_{khay_num}"
+                        )
+                    
+                    with col_x:
+                        x1 = st.slider(
+                            f"X1 (trái)",
+                            min_value=0,
+                            max_value=1400,
+                            value=coords[idx][2],
+                            key=f"x1_{khay_num}"
+                        )
+                        x2 = st.slider(
+                            f"X2 (phải)",
+                            min_value=x1 + 10,
+                            max_value=1400,
+                            value=coords[idx][3],
+                            key=f"x2_{khay_num}"
+                        )
+                    
+                    # Cập nhật tọa độ
+                    coords[idx] = (y1, y2, x1, x2)
+                    st.session_state['coords'] = coords
+                    
+                    # Preview ảnh cắt
+                    if 'current_image' in st.session_state:
+                        img = st.session_state['current_image']
+                        img_resized = cv2.resize(img, (1400, 1300))
+                        preview = img_resized[y1:y2, x1:x2]
+                        if preview.shape[0] > 0 and preview.shape[1] > 0:
+                            st.image(preview, caption=f"Preview Khay {khay_num}", use_column_width=True)
+            
+            # Nút preview tất cả
+            col_btn1, col_btn2, col_btn3 = st.columns(3)
+            with col_btn2:
+                if st.button("Preview All", use_container_width=True):
+                    if 'current_image' in st.session_state:
+                        img = st.session_state['current_image']
+                        cropped_results, img_resized = crop_with_custom_coords(img, coords)
+                        if cropped_results:
+                            img_with_boxes = draw_boxes_custom(img_resized, cropped_results)
+                            st.image(img_with_boxes, caption="All Trays", use_column_width=True)
+                            st.success(f"Đã cắt {len(cropped_results)} khay")
+                            st.session_state['cropped_preview'] = cropped_results
+                        else:
+                            st.error("Không cắt được khay nào! Kiểm tra lại tọa độ.")
+            
+            # Nút reset
+            with col_btn1:
+                if st.button("Reset Default", use_container_width=True):
+                    st.session_state['coords'] = default_coords.copy()
                     st.rerun()
-    else:
-        st.info("Click the camera button above to take a photo")
-        st.markdown('<div class="camera-container"><div class="camera-label">Ready to capture</div></div>', unsafe_allow_html=True)
+            
+            # Nút apply và nhận diện
+            with col_btn3:
+                if st.button("Apply & Recognize", use_container_width=True, type="primary"):
+                    if 'current_image' in st.session_state:
+                        img = st.session_state['current_image']
+                        cropped_results, img_resized = crop_with_custom_coords(img, coords)
+                        if cropped_results:
+                            session = load_model()
+                            if session is None:
+                                st.error("Model not found!")
+                            else:
+                                st.session_state['cropped_results'] = cropped_results
+                                st.session_state['img_resized'] = img_resized
+                                st.session_state['session'] = session
+                                st.session_state['processed'] = True
+                                st.rerun()
+                        else:
+                            st.error("Không cắt được khay nào! Kiểm tra lại tọa độ.")
+        
+        # Nút Recognize nhanh
+        if st.button("Recognize", use_container_width=True, type="primary"):
+            if 'current_image' in st.session_state:
+                img = st.session_state['current_image']
+                coords = st.session_state['coords']
+                cropped_results, img_resized = crop_with_custom_coords(img, coords)
+                if cropped_results:
+                    session = load_model()
+                    if session is None:
+                        st.error("Model not found!")
+                    else:
+                        st.session_state['cropped_results'] = cropped_results
+                        st.session_state['img_resized'] = img_resized
+                        st.session_state['session'] = session
+                        st.session_state['processed'] = True
+                        st.rerun()
+                else:
+                    st.error("Không cắt được khay nào! Kiểm tra lại tọa độ.")
 
 
 with col_right:
@@ -489,156 +579,149 @@ with col_right:
     st.markdown("---")
     
     if 'processed' in st.session_state and st.session_state['processed']:
-        image = st.session_state['image']
+        cropped_results = st.session_state['cropped_results']
+        img_resized = st.session_state['img_resized']
         session = st.session_state['session']
         
-        with st.spinner("Segmenting..."):
-            cropped_results, img_resized = crop_food_items(image)
+        img_with_boxes = draw_boxes_custom(img_resized, cropped_results)
+        st.image(img_with_boxes, caption="Detected Trays", use_column_width=True)
+        st.success(f"{len(cropped_results)} tray(s) detected")
         
-        if cropped_results:
-            img_with_boxes = draw_boxes_fixed(img_resized, cropped_results)
-            st.image(img_with_boxes, caption="Detected Trays", use_column_width=True)
+        detected_foods = []
+        food_details = []
+        extras = {}
+        
+        for idx, result in enumerate(cropped_results):
+            cropped_img = result["image"]
+            khay_id = result["id"]
             
-            st.success(f"{len(cropped_results)} tray(s) detected")
+            with st.expander(f"TRAY {khay_id}", expanded=(idx == 0)):
+                col_img, col_info = st.columns([1, 1.5])
+                
+                with col_img:
+                    try:
+                        h, w = cropped_img.shape[:2]
+                        scale = min(150 / h, 150 / w)
+                        new_h, new_w = int(h * scale), int(w * scale)
+                        img_display = cv2.resize(cropped_img, (new_w, new_h))
+                        st.image(img_display, use_column_width=True)
+                    except Exception:
+                        st.image(cropped_img, use_column_width=True)
+                
+                with col_info:
+                    try:
+                        preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
+                        
+                        input_name = session.get_inputs()[0].name
+                        output_name = session.get_outputs()[0].name
+                        
+                        result_onnx = session.run([output_name], {input_name: preprocessed})
+                        predictions = result_onnx[0][0]
+                        
+                        top3_idx = np.argsort(predictions)[-3:][::-1]
+                        top3_conf = predictions[top3_idx]
+                        
+                        st.markdown('<div style="font-size:0.5rem;color:#999;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.3rem;">Predictions</div>', unsafe_allow_html=True)
+                        
+                        for i, (fid, conf) in enumerate(zip(top3_idx, top3_conf)):
+                            name = get_food_name(fid)
+                            price = get_food_price(fid)
+                            if i == 0:
+                                st.markdown(f'<div class="prediction-item"><span class="main">▸ {name} <span class="conf">{conf*100:.1f}%</span></span><br><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
+                                detected_foods.append(fid)
+                                
+                                if has_extra_option(fid):
+                                    extra_key = len(detected_foods) - 1
+                                    egg_count = st.number_input(
+                                        "Extra eggs",
+                                        min_value=0,
+                                        max_value=10,
+                                        value=0,
+                                        step=1,
+                                        key=f"egg_{khay_id}",
+                                        help="Add extra eggs (+6,000 VND each)"
+                                    )
+                                    if egg_count > 0:
+                                        extras[extra_key] = egg_count
+                                
+                                food_details.append({
+                                    "tray": khay_id,
+                                    "name": name,
+                                    "price": price,
+                                    "confidence": conf
+                                })
+                            else:
+                                st.markdown(f'<div class="prediction-item"><span class="alt">{name} <span class="conf-alt">{conf*100:.1f}%</span></span></div>', unsafe_allow_html=True)
+                        
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+        
+        if detected_foods:
+            total_price, details = calculate_total(detected_foods, extras)
             
-            detected_foods = []
-            food_details = []
-            extras = {}
+            st.markdown("---")
+            st.markdown(f"""
+            <div class="total-card">
+                <div class="label">Total</div>
+                <div class="amount">{total_price:,} VND</div>
+                <div class="summary">{len(detected_foods)} items · {len(set(detected_foods))} types</div>
+            </div>
+            """, unsafe_allow_html=True)
             
-            for idx, result in enumerate(cropped_results):
-                cropped_img = result["image"]
-                khay_id = result["id"]
-                
-                with st.expander(f"TRAY {khay_id}", expanded=(idx == 0)):
-                    col_img, col_info = st.columns([1, 1.5])
-                    
-                    with col_img:
-                        try:
-                            h, w = cropped_img.shape[:2]
-                            scale = min(150 / h, 150 / w)
-                            new_h, new_w = int(h * scale), int(w * scale)
-                            img_display = cv2.resize(cropped_img, (new_w, new_h))
-                            st.image(img_display, use_column_width=True)
-                        except Exception:
-                            st.image(cropped_img, use_column_width=True)
-                    
-                    with col_info:
-                        try:
-                            preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
-                            
-                            input_name = session.get_inputs()[0].name
-                            output_name = session.get_outputs()[0].name
-                            
-                            result_onnx = session.run([output_name], {input_name: preprocessed})
-                            predictions = result_onnx[0][0]
-                            
-                            top3_idx = np.argsort(predictions)[-3:][::-1]
-                            top3_conf = predictions[top3_idx]
-                            
-                            st.markdown('<div style="font-size:0.5rem;color:#999;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.3rem;">Predictions</div>', unsafe_allow_html=True)
-                            
-                            for i, (fid, conf) in enumerate(zip(top3_idx, top3_conf)):
-                                name = get_food_name(fid)
-                                price = get_food_price(fid)
-                                if i == 0:
-                                    st.markdown(f'<div class="prediction-item"><span class="main">▸ {name} <span class="conf">{conf*100:.1f}%</span></span><br><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
-                                    detected_foods.append(fid)
-                                    
-                                    if has_extra_option(fid):
-                                        extra_key = len(detected_foods) - 1
-                                        egg_count = st.number_input(
-                                            "Extra eggs",
-                                            min_value=0,
-                                            max_value=10,
-                                            value=0,
-                                            step=1,
-                                            key=f"egg_{khay_id}",
-                                            help="Add extra eggs (+6,000 VND each)"
-                                        )
-                                        if egg_count > 0:
-                                            extras[extra_key] = egg_count
-                                    
-                                    food_details.append({
-                                        "tray": khay_id,
-                                        "name": name,
-                                        "price": price,
-                                        "confidence": conf
-                                    })
-                                else:
-                                    st.markdown(f'<div class="prediction-item"><span class="alt">{name} <span class="conf-alt">{conf*100:.1f}%</span></span></div>', unsafe_allow_html=True)
-                            
-                        except Exception as e:
-                            st.error(f"Error: {str(e)}")
+            st.markdown("### Payment")
+            st.markdown("---")
             
-            if detected_foods:
-                total_price, details = calculate_total(detected_foods, extras)
-                
-                st.markdown("---")
-                st.markdown(f"""
-                <div class="total-card">
-                    <div class="label">Total</div>
-                    <div class="amount">{total_price:,} VND</div>
-                    <div class="summary">{len(detected_foods)} items · {len(set(detected_foods))} types</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown("### Payment")
-                st.markdown("---")
-                
-                qr_img = generate_qr_code(total_price)
-                st.markdown(f"""
-                <div class="qr-container">
-                    <img src="{qr_img}" alt="QR Code">
-                    <div class="qr-amount">{total_price:,} VND</div>
-                    <div class="qr-bank">MB BANK · 0393167129</div>
-                    <div class="qr-label">LUONG NGOC THUAN</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                with st.expander("Invoice Details", expanded=False):
-                    for i, detail in enumerate(details):
-                        extra_text = detail.get('extra_text', '')
-                        st.markdown(
-                            f"<div class='invoice-row'>"
-                            f"<span>#{i+1}</span>"
-                            f"<span>{detail['name']}{extra_text}</span>"
-                            f"<span class='price'>{detail['price']:,} VND</span>"
-                            f"</div>",
-                            unsafe_allow_html=True
-                        )
-                    
+            qr_img = generate_qr_code(total_price)
+            st.markdown(f"""
+            <div class="qr-container">
+                <img src="{qr_img}" alt="QR Code">
+                <div class="qr-amount">{total_price:,} VND</div>
+                <div class="qr-bank">MB BANK · 0393167129</div>
+                <div class="qr-label">LUONG NGOC THUAN</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.expander("Invoice Details", expanded=False):
+                for i, detail in enumerate(details):
+                    extra_text = detail.get('extra_text', '')
                     st.markdown(
-                        f"<div class='invoice-total'>"
-                        f"<span>TOTAL</span>"
-                        f"<span class='total-price'>{total_price:,} VND</span>"
+                        f"<div class='invoice-row'>"
+                        f"<span>#{i+1}</span>"
+                        f"<span>{detail['name']}{extra_text}</span>"
+                        f"<span class='price'>{detail['price']:,} VND</span>"
                         f"</div>",
                         unsafe_allow_html=True
                     )
-                    
-                    invoice_text = f"INVOICE\n{'-'*30}\n"
-                    for i, d in enumerate(details):
-                        extra_text = d.get('extra_text', '')
-                        invoice_text += f"Tray {i+1}: {d['name']}{extra_text} - {d['price']:,} VND\n"
-                    invoice_text += f"{'-'*30}\nTOTAL: {total_price:,} VND"
-                    
-                    st.download_button(
-                        label="Download Invoice",
-                        data=invoice_text,
-                        file_name=f"invoice_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-                        mime="text/plain"
-                    )
-            
-        else:
-            st.warning("No trays detected")
+                
+                st.markdown(
+                    f"<div class='invoice-total'>"
+                    f"<span>TOTAL</span>"
+                    f"<span class='total-price'>{total_price:,} VND</span>"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
+                
+                invoice_text = f"INVOICE\n{'-'*30}\n"
+                for i, d in enumerate(details):
+                    extra_text = d.get('extra_text', '')
+                    invoice_text += f"Tray {i+1}: {d['name']}{extra_text} - {d['price']:,} VND\n"
+                invoice_text += f"{'-'*30}\nTOTAL: {total_price:,} VND"
+                
+                st.download_button(
+                    label="Download Invoice",
+                    data=invoice_text,
+                    file_name=f"invoice_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                    mime="text/plain"
+                )
         
         if st.button("Reset", use_container_width=True):
             st.session_state.clear()
             st.rerun()
     
     else:
-        st.info("Take a photo and click RECOGNIZE")
-        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Camera capture</div>', unsafe_allow_html=True)
-        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Automatic segmentation</div>', unsafe_allow_html=True)
+        st.info("Take a photo, adjust crop, then click Recognize")
+        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Adjust each tray position</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Preview all before recognize</div>', unsafe_allow_html=True)
 
 
 st.markdown("""
