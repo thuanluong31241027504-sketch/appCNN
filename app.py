@@ -2,12 +2,9 @@ import streamlit as st
 import numpy as np
 import cv2
 import os
-import sys
-import onnxruntime as ort
 from datetime import datetime
-import qrcode
-from io import BytesIO
-import base64
+from PIL import Image
+import onnxruntime as ort
 
 st.set_page_config(
     page_title="Food Detection System",
@@ -24,129 +21,26 @@ CLASS_NAMES = [
 
 PRICES = [10000, 25000, 30000, 30000, 25000, 25000, 30000, 7000, 10000, 25000]
 
+MENU = [
+    {"id": i, "name": CLASS_NAMES[i], "price": PRICES[i], "category": "Món ăn"}
+    for i in range(len(CLASS_NAMES))
+]
+
 def get_food_name(food_id):
-    if 0 <= food_id < len(CLASS_NAMES):
-        return CLASS_NAMES[food_id]
-    return "Unknown"
+    return CLASS_NAMES[food_id] if 0 <= food_id < len(CLASS_NAMES) else "Unknown"
 
 def get_food_price(food_id):
-    if 0 <= food_id < len(PRICES):
-        return PRICES[food_id]
-    return 0
+    return PRICES[food_id] if 0 <= food_id < len(PRICES) else 0
 
-# ==================== HÀM XỬ LÝ ẢNH (CODE GỐC) ====================
-def load_image(uploaded_file):
-    """Đọc ảnh từ file upload"""
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    return img
-
-def preprocess_image(img, target_size=(224, 224)):
-    """Tiền xử lý ảnh cho model"""
-    img_resized = cv2.resize(img, target_size)
-    img_array = np.expand_dims(img_resized, axis=0).astype(np.float32) / 255.0
-    return img_array
-
-def crop_food_tray(image_path):
-    """Cắt ảnh khay cơm thành 5 ô - CODE GỐC"""
-    img = cv2.imread(image_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (1400, 1300))
-    
-    regions = {
-        "canhrau": img[40:700, 40:760],
-        "comtrang": img[40:700, 820:1380],
-        "rausong": img[760:1280, 30:500],
-        "cakho": img[760:1280, 520:920],
-        "thitkho": img[760:1280, 950:1380]
-    }
-    
-    return regions
-
-def crop_food_items(image):
-    """Cắt ảnh từ numpy array - dùng cho Streamlit"""
-    img = cv2.resize(image, (1400, 1300))
-    
-    regions = {
-        "canhrau": img[40:700, 40:760],
-        "comtrang": img[40:700, 820:1380],
-        "rausong": img[760:1280, 30:500],
-        "cakho": img[760:1280, 520:920],
-        "thitkho": img[760:1280, 950:1380]
-    }
-    
-    cropped_results = []
-    for i, (name, crop) in enumerate(regions.items()):
-        if crop.size > 0:
-            cropped_results.append({
-                "id": i + 1,
-                "name": name,
-                "image": crop
-            })
-    
-    return cropped_results, img
-
-def draw_boxes_fixed(img, results):
-    """Vẽ box lên ảnh gốc"""
-    img_copy = img.copy()
-    
-    positions = {
-        1: (40, 700, 40, 760),
-        2: (40, 700, 820, 1380),
-        3: (760, 1280, 30, 500),
-        4: (760, 1280, 520, 920),
-        5: (760, 1280, 950, 1380)
-    }
-    
-    for result in results:
-        idx = result["id"]
-        if idx in positions:
-            y1, y2, x1, x2 = positions[idx]
-            cv2.rectangle(img_copy, (x1, y1), (x2, y2), (0, 255, 0), 3)
-            cv2.putText(img_copy, f"Tray {idx}", (x1, y1 - 10), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-    
-    return img_copy
-
-# ==================== QR CODE ====================
-def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name="LUONG NGOC THUAN"):
-    qr_data = f"https://img.vietqr.io/image/{bank_name}-{bank_id}-compact.png?amount={amount}&addInfo=THANHTOAN"
-    
-    qr = qrcode.QRCode(version=1, box_size=4, border=2)
-    qr.add_data(qr_data)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    
-    buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    
-    return f"data:image/png;base64,{img_str}"
-
-# ==================== LOAD MODEL ====================
-@st.cache_resource
-def load_model():
-    model_files = ['model.onnx', 'trainaicuoiky1.onnx', 'best_model.onnx']
-    
-    for name in model_files:
-        if os.path.exists(name):
-            try:
-                session = ort.InferenceSession(name)
-                return session
-            except Exception:
-                continue
-    
-    for root, dirs, files in os.walk('.'):
-        for file in files:
-            if file.endswith('.onnx'):
-                try:
-                    session = ort.InferenceSession(os.path.join(root, file))
-                    return session
-                except Exception:
-                    continue
-    
-    return None
+def calculate_total(food_ids):
+    details = []
+    total = 0
+    for fid in food_ids:
+        name = get_food_name(fid)
+        price = get_food_price(fid)
+        details.append({"name": name, "price": price})
+        total += price
+    return total, details
 
 # ==================== CSS ====================
 st.markdown("""
@@ -263,19 +157,75 @@ st.markdown("""
         padding: 0.1rem 0.6rem;
         display: inline-block;
     }
-    .qr-container {
-        border: 1px solid #000000;
-        padding: 0.8rem;
-        text-align: center;
-        background: #ffffff;
-        margin: 0.5rem 0;
-    }
-    .qr-container img {
-        max-width: 130px;
-        height: auto;
-    }
 </style>
 """, unsafe_allow_html=True)
+
+# ==================== HÀM XỬ LÝ ẢNH (CODE GỐC) ====================
+def load_image(uploaded_file):
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img
+
+def preprocess_image(img, target_size=(224, 224)):
+    img_resized = cv2.resize(img, target_size)
+    img_array = np.expand_dims(img_resized, axis=0).astype(np.float32) / 255.0
+    return img_array
+
+def crop_food_items(image):
+    img = cv2.resize(image, (1400, 1300))
+    
+    regions = {
+        "canhrau": img[40:700, 40:760],
+        "comtrang": img[40:700, 820:1380],
+        "rausong": img[760:1280, 30:500],
+        "cakho": img[760:1280, 520:920],
+        "thitkho": img[760:1280, 950:1380]
+    }
+    
+    cropped_results = []
+    for i, (name, crop) in enumerate(regions.items()):
+        if crop.size > 0:
+            cropped_results.append({
+                "id": i + 1,
+                "name": name,
+                "image": crop
+            })
+    
+    return cropped_results, img
+
+def draw_boxes_fixed(img, results):
+    img_copy = img.copy()
+    
+    positions = {
+        1: (40, 700, 40, 760),
+        2: (40, 700, 820, 1380),
+        3: (760, 1280, 30, 500),
+        4: (760, 1280, 520, 920),
+        5: (760, 1280, 950, 1380)
+    }
+    
+    for result in results:
+        idx = result["id"]
+        if idx in positions:
+            y1, y2, x1, x2 = positions[idx]
+            cv2.rectangle(img_copy, (x1, y1), (x2, y2), (0, 255, 0), 3)
+            cv2.putText(img_copy, f"Tray {idx}", (x1, y1 - 10), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    
+    return img_copy
+
+# ==================== LOAD MODEL ====================
+@st.cache_resource
+def load_model():
+    possible_names = ['model.onnx', 'food_classifier.onnx', 'best_model.onnx']
+    for name in possible_names:
+        if os.path.exists(name):
+            try:
+                return ort.InferenceSession(name)
+            except Exception:
+                continue
+    return None
 
 # ==================== HEADER ====================
 st.markdown("""
@@ -289,23 +239,19 @@ st.markdown("""
 with st.sidebar:
     st.markdown("### MENU")
     st.markdown("---")
-    
-    for i, name in enumerate(CLASS_NAMES):
+    for item in MENU:
         st.markdown(
-            f"<div class='menu-item'>{name} "
-            f"<span class='menu-price'>{PRICES[i]:,} VND</span></div>",
+            f"<div class='menu-item'>{item['name']} "
+            f"<span class='menu-price'>{item['price']:,} VND</span></div>",
             unsafe_allow_html=True
         )
     
     st.markdown("---")
-    
     session = load_model()
     if session:
-        st.success("✅ MODEL READY")
+        st.success("MODEL READY")
     else:
-        st.error("❌ MODEL NOT FOUND")
-        st.info("Upload file .onnx vào thư mục chính")
-    
+        st.error("MODEL NOT FOUND")
     st.markdown("---")
     st.caption(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
@@ -314,11 +260,7 @@ col_left, col_right = st.columns([2.5, 1.5])
 
 with col_left:
     st.markdown("### UPLOAD")
-    
-    uploaded_file = st.file_uploader(
-        "Select image",
-        type=['jpg', 'jpeg', 'png']
-    )
+    uploaded_file = st.file_uploader("Select image", type=['jpg', 'jpeg', 'png'])
     
     if uploaded_file is not None:
         image = load_image(uploaded_file)
@@ -327,7 +269,6 @@ with col_left:
         if st.button("RECOGNIZE", type="primary", use_container_width=True):
             with st.spinner("Processing..."):
                 session = load_model()
-                
                 if session is None:
                     st.error("MODEL NOT FOUND")
                 else:
@@ -348,7 +289,6 @@ with col_right:
         if cropped_results:
             img_with_boxes = draw_boxes_fixed(img_resized, cropped_results)
             st.image(img_with_boxes, caption="DETECTED", use_column_width=True)
-            
             st.success(f"{len(cropped_results)} trays detected")
             
             detected_foods = []
@@ -412,13 +352,7 @@ with col_right:
                             st.error(f"Error: {str(e)}")
             
             if detected_foods:
-                total_price = sum([get_food_price(fid) for fid in detected_foods])
-                details = []
-                for fid in detected_foods:
-                    details.append({
-                        "name": get_food_name(fid),
-                        "price": get_food_price(fid)
-                    })
+                total_price, details = calculate_total(detected_foods)
                 
                 st.markdown(f"""
                 <div class="summary-grid">
@@ -454,7 +388,6 @@ with col_right:
                         <span>{total_price:,} VND</span>
                     </div>
                     """
-                    
                     st.markdown(invoice_html, unsafe_allow_html=True)
                     
                     invoice_text = f"INVOICE\n{'-'*30}\n"
@@ -473,11 +406,25 @@ with col_right:
                     
                     with col_dl2:
                         try:
-                            qr_img = generate_qr_code(total_price)
+                            import qrcode
+                            from io import BytesIO
+                            import base64
+                            
+                            qr_data = f"https://img.vietqr.io/image/MB-0393167129-compact.png?amount={total_price}&addInfo=THANHTOAN"
+                            qr = qrcode.QRCode(version=1, box_size=4, border=2)
+                            qr.add_data(qr_data)
+                            qr.make(fit=True)
+                            img_qr = qr.make_image(fill_color="black", back_color="white")
+                            
+                            buffered = BytesIO()
+                            img_qr.save(buffered, format="PNG")
+                            img_str = base64.b64encode(buffered.getvalue()).decode()
+                            qr_img = f"data:image/png;base64,{img_str}"
+                            
                             st.markdown(f"""
-                            <div class="qr-container">
-                                <img src="{qr_img}" alt="QR Code">
-                                <div class="qr-label">{total_price:,} VND</div>
+                            <div style="border:1px solid #000000;padding:0.8rem;text-align:center;background:#ffffff;margin:0.5rem 0;">
+                                <img src="{qr_img}" style="max-width:130px;height:auto;">
+                                <div style="font-size:1rem;font-weight:300;color:#000000;margin:0.15rem 0;">{total_price:,} VND</div>
                             </div>
                             """, unsafe_allow_html=True)
                         except Exception:
