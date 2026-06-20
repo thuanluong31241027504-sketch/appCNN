@@ -8,7 +8,6 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import base64
-import matplotlib.pyplot as plt
 
 st.set_page_config(
     page_title="Food Detection System",
