@@ -8,23 +8,114 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import base64
+from tensorflow.keras.preprocessing import image
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from data.menu import MENU, get_food_name, get_food_price, calculate_total
-from utils.image_processor import load_image, preprocess_image, crop_food_items, draw_boxes_fixed
-
-
 st.set_page_config(
     page_title="Food Detection System",
-    page_icon="",
+    page_icon="🍱",
     layout="wide"
 )
 
+# ==================== DANH SÁCH MÓN ĂN ====================
+CLASS_NAMES = [
+    'Cơm trắng', 'Đậu hũ sốt cà', 'Cá hú kho', 
+    'Thịt kho trứng', 'Thịt kho', 'Canh chua có cá',
+    'Canh chua không cá', 'Sườn nướng', 'Canh rau', 
+    'Rau xào', 'Trứng chiên'
+]
 
+PRICES = [10000, 25000, 30000, 30000, 25000, 25000, 10000, 30000, 7000, 10000, 25000]
+
+MENU = []
+for i, name in enumerate(CLASS_NAMES):
+    MENU.append({
+        "id": i,
+        "name": name,
+        "price": PRICES[i],
+        "category": "Món ăn"
+    })
+
+def get_food_name(food_id):
+    if 0 <= food_id < len(CLASS_NAMES):
+        return CLASS_NAMES[food_id]
+    return "Unknown"
+
+def get_food_price(food_id):
+    if 0 <= food_id < len(PRICES):
+        return PRICES[food_id]
+    return 0
+
+def calculate_total(food_ids):
+    details = []
+    total = 0
+    for fid in food_ids:
+        name = get_food_name(fid)
+        price = get_food_price(fid)
+        details.append({"name": name, "price": price})
+        total += price
+    return total, details
+
+# ==================== HÀM XỬ LÝ ẢNH ====================
+def load_image(uploaded_file):
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img
+
+def crop_food_items(image):
+    img = cv2.resize(image, (1400, 1300))
+    
+    regions = {
+        "vung_1": img[40:700, 40:760],
+        "vung_2": img[40:700, 820:1380],
+        "vung_3": img[760:1280, 30:500],
+        "vung_4": img[760:1280, 520:920],
+        "vung_5": img[760:1280, 950:1380]
+    }
+    
+    cropped_results = []
+    for i, (name, crop) in enumerate(regions.items()):
+        if crop.size > 0:
+            cropped_results.append({
+                "id": i + 1,
+                "name": name,
+                "image": crop
+            })
+    
+    return cropped_results, img
+
+def draw_boxes_fixed(img, results):
+    img_copy = img.copy()
+    h, w = img_copy.shape[:2]
+    
+    positions = {
+        1: (40, 700, 40, 760),
+        2: (40, 700, 820, 1380),
+        3: (760, 1280, 30, 500),
+        4: (760, 1280, 520, 920),
+        5: (760, 1280, 950, 1380)
+    }
+    
+    for result in results:
+        idx = result["id"]
+        if idx in positions:
+            y1, y2, x1, x2 = positions[idx]
+            cv2.rectangle(img_copy, (x1, y1), (x2, y2), (0, 255, 0), 3)
+            cv2.putText(img_copy, f"Tray {idx}", (x1, y1 - 10), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    
+    return img_copy
+
+def preprocess_image(img, target_size=(224, 224)):
+    img_resized = cv2.resize(img, target_size)
+    img_array = np.expand_dims(img_resized, axis=0).astype(np.float32) / 255.0
+    return img_array
+
+# ==================== QR CODE ====================
 def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name="LUONG NGOC THUAN"):
-    """Generate QR code for bank transfer using VietQR"""
-    # VietQR format
     qr_data = f"https://img.vietqr.io/image/{bank_name}-{bank_id}-compact.png?amount={amount}&addInfo=THANHTOAN"
     
     qr = qrcode.QRCode(version=1, box_size=4, border=2)
@@ -38,15 +129,34 @@ def generate_qr_code(amount, bank_id="0393167129", bank_name="MB", account_name=
     
     return f"data:image/png;base64,{img_str}"
 
+# ==================== LOAD MODEL ====================
+@st.cache_resource
+def load_model():
+    model_files = ['model.onnx', 'trainaicuoiky1.onnx', 'best_model.onnx']
+    
+    for name in model_files:
+        if os.path.exists(name):
+            try:
+                session = ort.InferenceSession(name)
+                return session
+            except Exception:
+                continue
+    
+    # Thử tìm trong thư mục con
+    for root, dirs, files in os.walk('.'):
+        for file in files:
+            if file.endswith('.onnx'):
+                try:
+                    session = ort.InferenceSession(os.path.join(root, file))
+                    return session
+                except Exception:
+                    continue
+    
+    return None
 
+# ==================== CSS ====================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
-    
-    * {
-        font-family: 'JetBrains Mono', 'Courier New', monospace;
-    }
-    
     .header {
         background: #ffffff;
         padding: 1.2rem 2rem;
@@ -68,7 +178,6 @@ st.markdown("""
         font-weight: 300;
         letter-spacing: 2px;
     }
-    
     .menu-item {
         padding: 0.25rem 0;
         border-bottom: 1px solid #e0e0e0;
@@ -76,139 +185,11 @@ st.markdown("""
         color: #333333;
         font-weight: 300;
     }
-    .menu-item:hover {
-        border-bottom: 1px solid #000000;
-        padding-left: 0.5rem;
-        transition: all 0.3s;
-    }
     .menu-price {
         float: right;
         color: #000000;
         font-weight: 400;
     }
-    
-    .pushable {
-        background: transparent;
-        border: none;
-        padding: 0;
-        cursor: pointer;
-        outline-offset: 4px;
-        outline: none;
-        width: 100%;
-    }
-    .pushable:focus {
-        outline: none;
-    }
-    .front {
-        display: block;
-        padding: 0.6rem 1.5rem;
-        font-size: 0.6rem;
-        font-weight: 400;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        background: #ffffff;
-        color: #000000;
-        transform: translateY(-4px);
-        border: 1px solid #000000;
-        transition: all 0.1s ease;
-        box-shadow: 0 2px 0 #000000, 0 4px 0 #000000;
-    }
-    .pushable:hover .front {
-        background: #000000;
-        color: #ffffff;
-        box-shadow: 0 1px 0 #000000, 0 2px 0 #000000;
-        transform: translateY(-2px);
-    }
-    .pushable:active .front {
-        box-shadow: 0 0px 0 #000000, 0 0px 0 #000000;
-        transform: translateY(0px);
-    }
-    
-    .pushable-secondary {
-        background: transparent;
-        border: none;
-        padding: 0;
-        cursor: pointer;
-        outline-offset: 4px;
-        outline: none;
-        width: 100%;
-    }
-    .pushable-secondary .front-secondary {
-        display: block;
-        padding: 0.4rem 1.5rem;
-        font-size: 0.5rem;
-        font-weight: 300;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        background: transparent;
-        color: #666666;
-        transform: translateY(-3px);
-        border: 1px solid #cccccc;
-        transition: all 0.1s ease;
-        box-shadow: 0 1px 0 #cccccc, 0 2px 0 #cccccc;
-    }
-    .pushable-secondary:hover .front-secondary {
-        color: #000000;
-        border-color: #000000;
-        box-shadow: 0 1px 0 #000000, 0 2px 0 #000000;
-        transform: translateY(-2px);
-    }
-    .pushable-secondary:active .front-secondary {
-        box-shadow: 0 0px 0 #000000, 0 0px 0 #000000;
-        transform: translateY(0px);
-    }
-    
-    .streamlit-expanderHeader {
-        font-family: 'JetBrains Mono', monospace !important;
-        background: #ffffff !important;
-        border: 1px solid #000000 !important;
-        border-radius: 0px !important;
-        color: #000000 !important;
-        font-size: 0.6rem !important;
-        font-weight: 300 !important;
-        letter-spacing: 2px !important;
-        text-transform: uppercase !important;
-    }
-    .streamlit-expanderHeader:hover {
-        background: #000000 !important;
-        color: #ffffff !important;
-    }
-    .streamlit-expanderContent {
-        background: #ffffff !important;
-        border: 1px solid #000000 !important;
-        border-top: none !important;
-        border-radius: 0px !important;
-        padding: 0.8rem !important;
-    }
-    
-    .total-card {
-        background: #ffffff;
-        border: 1px solid #000000;
-        padding: 1.2rem;
-        text-align: center;
-        margin: 0.8rem 0;
-    }
-    .total-card .label {
-        color: #666666;
-        font-size: 0.55rem;
-        font-weight: 300;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-    }
-    .total-card .amount {
-        color: #000000;
-        font-size: 2rem;
-        font-weight: 300;
-        letter-spacing: 2px;
-        margin: 0.2rem 0;
-    }
-    .total-card .summary {
-        color: #666666;
-        font-size: 0.55rem;
-        font-weight: 300;
-        letter-spacing: 1px;
-    }
-    
     .invoice-row {
         display: flex;
         justify-content: space-between;
@@ -216,17 +197,6 @@ st.markdown("""
         border-bottom: 1px solid #f0f0f0;
         font-size: 0.65rem;
         color: #333333;
-    }
-    .invoice-row .tray {
-        font-weight: 300;
-        color: #666666;
-    }
-    .invoice-row .item-name {
-        font-weight: 400;
-    }
-    .invoice-row .item-price {
-        font-weight: 400;
-        color: #000000;
     }
     .invoice-total {
         display: flex;
@@ -238,7 +208,29 @@ st.markdown("""
         color: #000000;
         margin-top: 0.3rem;
     }
-    
+    .footer {
+        text-align: center;
+        padding: 1rem 0 0.3rem 0;
+        color: #cccccc;
+        font-size: 0.45rem;
+        border-top: 1px solid #000000;
+        margin-top: 1rem;
+        letter-spacing: 2px;
+    }
+    .total-card {
+        background: #ffffff;
+        border: 1px solid #000000;
+        padding: 1.2rem;
+        text-align: center;
+        margin: 0.8rem 0;
+    }
+    .total-card .amount {
+        color: #000000;
+        font-size: 2rem;
+        font-weight: 300;
+        letter-spacing: 2px;
+        margin: 0.2rem 0;
+    }
     .summary-grid {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -264,48 +256,6 @@ st.markdown("""
         text-transform: uppercase;
         margin-top: 0.1rem;
     }
-    
-    .qr-container {
-        border: 1px solid #000000;
-        padding: 0.8rem;
-        text-align: center;
-        background: #ffffff;
-        margin: 0.5rem 0;
-    }
-    .qr-container img {
-        max-width: 130px;
-        height: auto;
-    }
-    .qr-container .qr-label {
-        font-size: 0.45rem;
-        color: #666666;
-        font-weight: 300;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-top: 0.2rem;
-    }
-    .qr-container .qr-amount {
-        font-size: 1rem;
-        font-weight: 300;
-        color: #000000;
-        margin: 0.15rem 0;
-    }
-    .qr-container .qr-bank {
-        font-size: 0.5rem;
-        color: #666666;
-        font-weight: 300;
-        letter-spacing: 1px;
-    }
-    
-    .stAlert {
-        border-radius: 0px !important;
-        background: #f5f5f5 !important;
-        border-left: 3px solid #000000 !important;
-        color: #333333 !important;
-        font-weight: 300 !important;
-        font-size: 0.65rem !important;
-    }
-    
     .badge-high {
         color: #000000;
         font-size: 0.5rem;
@@ -333,106 +283,21 @@ st.markdown("""
         padding: 0.1rem 0.6rem;
         display: inline-block;
     }
-    
-    .stImage figcaption {
-        color: #666666 !important;
-        font-size: 0.5rem !important;
-        font-weight: 300 !important;
-        letter-spacing: 1px !important;
-        text-align: center !important;
-    }
-    
-    .stFileUploader {
-        background: #ffffff !important;
-        border: 1px dashed #000000 !important;
-        border-radius: 0px !important;
-        padding: 0.6rem !important;
-    }
-    .stFileUploader:hover {
-        border-style: solid !important;
-    }
-    .stFileUploader label {
-        color: #666666 !important;
-        font-weight: 300 !important;
-        letter-spacing: 1px !important;
-        font-size: 0.65rem !important;
-    }
-    
-    .css-1d391kg {
-        background-color: #ffffff !important;
-        border-right: 1px solid #000000 !important;
-    }
-    .css-1d391kg .stMarkdown {
-        color: #333333 !important;
-    }
-    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
-        color: #000000 !important;
-        font-weight: 300 !important;
-        letter-spacing: 2px !important;
-        font-size: 0.9rem !important;
-    }
-    
-    hr {
-        border: none;
-        border-top: 1px solid #000000;
-        margin: 0.8rem 0;
-    }
-    
-    .footer {
+    .qr-container {
+        border: 1px solid #000000;
+        padding: 0.8rem;
         text-align: center;
-        padding: 1rem 0 0.3rem 0;
-        color: #cccccc;
-        font-size: 0.45rem;
-        border-top: 1px solid #000000;
-        margin-top: 1rem;
-        letter-spacing: 2px;
+        background: #ffffff;
+        margin: 0.5rem 0;
     }
-    
-    ::-webkit-scrollbar {
-        width: 3px;
-        background: #f5f5f5;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #000000;
+    .qr-container img {
+        max-width: 130px;
+        height: auto;
     }
 </style>
 """, unsafe_allow_html=True)
 
-
-def check_model_files():
-    model_files = []
-    possible_names = ['model.onnx', 'trainaicuoiky1.onnx']
-    
-    for name in possible_names:
-        if os.path.exists(name):
-            size = os.path.getsize(name) / (1024 * 1024)
-            model_files.append({
-                'name': name,
-                'size': size,
-                'path': os.path.abspath(name)
-            })
-    
-    return model_files
-
-
-@st.cache_resource
-def load_model():
-    model_files = check_model_files()
-    if not model_files:
-        return None
-    
-    onnx_files = [f for f in model_files if f['name'].endswith('.onnx')]
-    if onnx_files:
-        chosen = onnx_files[0]
-        try:
-            session = ort.InferenceSession(chosen['path'])
-            return session
-        except Exception:
-            return None
-    
-    return None
-
-
+# ==================== HEADER ====================
 st.markdown("""
 <div class="header">
     <h1>FOOD DETECTION SYSTEM</h1>
@@ -440,42 +305,31 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
+# ==================== SIDEBAR ====================
 with st.sidebar:
     st.markdown("### MENU")
     st.markdown("---")
     
-    categories = {}
     for item in MENU:
-        cat = item.get("category", "Other")
-        if cat not in categories:
-            categories[cat] = []
-        categories[cat].append(item)
-    
-    for cat, items in categories.items():
-        st.markdown(f"**{cat.upper()}**")
-        for item in items:
-            note = f" ({item['note']})" if item.get('note') else ""
-            st.markdown(
-                f"<div class='menu-item'>{item['name']} {note} "
-                f"<span class='menu-price'>{item['price']:,} VND</span></div>",
-                unsafe_allow_html=True
-            )
+        st.markdown(
+            f"<div class='menu-item'>{item['name']} "
+            f"<span class='menu-price'>{item['price']:,} VND</span></div>",
+            unsafe_allow_html=True
+        )
     
     st.markdown("---")
     
-    model_files = check_model_files()
-    if model_files:
-        st.success("MODEL READY")
-        for mf in model_files:
-            st.caption(f"{mf['name']} ({mf['size']:.1f} MB)")
+    session = load_model()
+    if session:
+        st.success("✅ MODEL READY")
     else:
-        st.error("MODEL NOT FOUND")
+        st.error("❌ MODEL NOT FOUND")
+        st.info("Upload file .onnx vào thư mục chính")
     
     st.markdown("---")
     st.caption(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-
+# ==================== MAIN ====================
 col_left, col_right = st.columns([2.5, 1.5])
 
 with col_left:
@@ -502,7 +356,6 @@ with col_left:
                     st.session_state['processed'] = True
                     st.rerun()
 
-
 with col_right:
     st.markdown("### OUTPUT")
     
@@ -510,8 +363,7 @@ with col_right:
         image = st.session_state['image']
         session = st.session_state['session']
         
-        with st.spinner("Segmenting..."):
-            cropped_results, img_resized = crop_food_items(image)
+        cropped_results, img_resized = crop_food_items(image)
         
         if cropped_results:
             img_with_boxes = draw_boxes_fixed(img_resized, cropped_results)
@@ -582,35 +434,31 @@ with col_right:
             if detected_foods:
                 total_price, details = calculate_total(detected_foods)
                 
-                st.markdown("""
+                st.markdown(f"""
                 <div class="summary-grid">
                     <div class="summary-item">
-                        <div class="value">{}</div>
+                        <div class="value">{len(detected_foods)}</div>
                         <div class="desc">Items</div>
                     </div>
                     <div class="summary-item">
-                        <div class="value">{}</div>
+                        <div class="value">{len(set(detected_foods))}</div>
                         <div class="desc">Types</div>
                     </div>
                     <div class="summary-item">
-                        <div class="value">{:,} VND</div>
+                        <div class="value">{total_price:,} VND</div>
                         <div class="desc">Total</div>
                     </div>
                 </div>
-                """.format(
-                    len(detected_foods),
-                    len(set(detected_foods)),
-                    total_price
-                ), unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
                 
                 with st.expander("INVOICE DETAILS", expanded=True):
                     invoice_html = ""
                     for i, detail in enumerate(details):
                         invoice_html += f"""
                         <div class="invoice-row">
-                            <span class="tray">#{i+1}</span>
-                            <span class="item-name">{detail['name']}</span>
-                            <span class="item-price">{detail['price']:,} VND</span>
+                            <span>#{i+1}</span>
+                            <span>{detail['name']}</span>
+                            <span>{detail['price']:,} VND</span>
                         </div>
                         """
                     
@@ -643,12 +491,10 @@ with col_right:
                             st.markdown(f"""
                             <div class="qr-container">
                                 <img src="{qr_img}" alt="QR Code">
-                                <div class="qr-amount">{total_price:,} VND</div>
-                                <div class="qr-bank">MB BANK · 0393167129</div>
-                                <div class="qr-label">LUONG NGOC THUAN</div>
+                                <div class="qr-label">{total_price:,} VND</div>
                             </div>
                             """, unsafe_allow_html=True)
-                        except Exception as e:
+                        except Exception:
                             st.caption("QR generation error")
             
         else:
@@ -660,11 +506,10 @@ with col_right:
     
     else:
         st.info("Upload image and click Recognize")
-        st.caption("Automatic segmentation · Real-time inference")
 
-
+# ==================== FOOTER ====================
 st.markdown("""
 <div class="footer">
-    <p>FOOD DETECTION SYSTEM v2.0 · ONNX RUNTIME · 10 FOOD CLASSES</p>
+    <p>FOOD DETECTION SYSTEM · ONNX RUNTIME · 10 FOOD CLASSES</p>
 </div>
 """, unsafe_allow_html=True)
