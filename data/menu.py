@@ -1,9 +1,9 @@
-# Danh sách món ăn từ bảng - ĐÃ GỘP CANH CHUA
+# Danh sách món ăn
 MENU = [
     {"id": 0, "name": "Com trang", "price": 10000, "note": "Mot gia tien nhieu hay it", "category": "Mon chinh"},
     {"id": 1, "name": "Dau hu sot ca", "price": 25000, "note": "", "category": "Mon chinh"},
     {"id": 2, "name": "Ca hu kho", "price": 30000, "note": "", "category": "Mon chinh"},
-    {"id": 3, "name": "Thit kho trung", "price": 30000, "note": "Mot trung, them 1 trung + 6000 dong", "category": "Mon chinh"},
+    {"id": 3, "name": "Thit kho trung", "price": 30000, "note": "Mot trung, them 1 trung + 6000 dong", "category": "Mon chinh", "has_extra": True},
     {"id": 4, "name": "Thit kho", "price": 25000, "note": "Khong co trung", "category": "Mon chinh"},
     {"id": 5, "name": "Canh chua", "price": 25000, "note": "Co ca hoac khong ca", "category": "Canh"},
     {"id": 6, "name": "Canh rau", "price": 7000, "note": "Cai hay muong", "category": "Canh"},
@@ -19,62 +19,72 @@ ID_MAP = {
 }
 
 def get_food_name(food_id):
-    """Lấy tên món ăn theo ID"""
-    # Ánh xạ ID cũ sang ID mới
     if food_id in ID_MAP:
         food_id = ID_MAP[food_id]
-    
     for item in MENU:
         if item["id"] == food_id:
             return item["name"]
     return "Khong xac dinh"
 
 def get_food_price(food_id):
-    """Lấy giá tiền theo ID"""
     if food_id in ID_MAP:
         food_id = ID_MAP[food_id]
-    
     for item in MENU:
         if item["id"] == food_id:
             return item["price"]
     return 0
 
 def get_food_category(food_id):
-    """Lấy danh mục món ăn"""
     if food_id in ID_MAP:
         food_id = ID_MAP[food_id]
-    
     for item in MENU:
         if item["id"] == food_id:
             return item["category"]
     return "Khac"
 
 def get_food_note(food_id):
-    """Lấy ghi chú món ăn"""
     if food_id in ID_MAP:
         food_id = ID_MAP[food_id]
-    
     for item in MENU:
         if item["id"] == food_id:
             return item["note"]
     return ""
 
-def calculate_total(detected_foods):
-    """Tính tổng tiền từ danh sách món ăn đã detect"""
+def has_extra_option(food_id):
+    if food_id in ID_MAP:
+        food_id = ID_MAP[food_id]
+    for item in MENU:
+        if item["id"] == food_id:
+            return item.get("has_extra", False)
+    return False
+
+def calculate_total(detected_foods, extras=None):
     total = 0
     details = []
-    for food_id in detected_foods:
-        # Ánh xạ ID cũ sang ID mới
+    
+    for idx, food_id in enumerate(detected_foods):
         if food_id in ID_MAP:
             food_id = ID_MAP[food_id]
         
         name = get_food_name(food_id)
         price = get_food_price(food_id)
         category = get_food_category(food_id)
+        
+        # Xử lý extra (thêm trứng)
+        extra_text = ""
+        if extras and idx in extras:
+            egg_count = extras[idx]
+            if egg_count > 0:
+                extra_cost = egg_count * 6000
+                price += extra_cost
+                extra_text = f" (+{egg_count} trung = +{extra_cost:,} VND)"
+        
         total += price
         details.append({
-            "name": name, 
+            "name": name,
             "price": price,
-            "category": category
+            "category": category,
+            "extra_text": extra_text
         })
+    
     return total, details
