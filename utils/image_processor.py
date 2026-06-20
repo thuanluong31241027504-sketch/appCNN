@@ -8,21 +8,12 @@ def load_image(uploaded_file):
     return img
 
 def preprocess_image(img, target_size=(224, 224)):
-    img_resized = cv2.resize(img, target_size, interpolation=cv2.INTER_LANCZOS4)
+    img_resized = cv2.resize(img, target_size)
     img_array = np.expand_dims(img_resized, axis=0).astype(np.float32) / 255.0
     return img_array
 
-def enhance_image(img):
-    img_lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-    l, a, b = cv2.split(img_lab)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    l_enhanced = clahe.apply(l)
-    img_enhanced = cv2.merge((l_enhanced, a, b))
-    img_enhanced = cv2.cvtColor(img_enhanced, cv2.COLOR_LAB2RGB)
-    return img_enhanced
-
 def crop_food_items(image):
-    img = cv2.resize(image, (1400, 1300), interpolation=cv2.INTER_LANCZOS4)
+    img = cv2.resize(image, (1400, 1300))
     
     regions = {
         "canhrau": img[40:700, 40:760],
@@ -35,12 +26,10 @@ def crop_food_items(image):
     cropped_results = []
     for i, (name, crop) in enumerate(regions.items()):
         if crop.size > 0:
-            crop_enhanced = enhance_image(crop)
             cropped_results.append({
                 "id": i + 1,
                 "name": name,
-                "image": crop,
-                "image_enhanced": crop_enhanced
+                "image": crop
             })
     
     return cropped_results, img
