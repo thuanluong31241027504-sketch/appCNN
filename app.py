@@ -222,14 +222,14 @@ st.markdown("""
     .footer {
         text-align: center;
         padding: 1.5rem 0 0.5rem 0;
-        color: #dddddd;
+        color: #999999;
         font-size: 0.55rem;
         border-top: 1px solid #eeeeee;
         margin-top: 1.5rem;
         letter-spacing: 2px;
     }
     .footer .copyright {
-        color: #22c55e;
+        color: #999999;
         font-weight: 300;
     }
     
@@ -643,6 +643,6 @@ with col_right:
 
 st.markdown("""
 <div class="footer">
-    <p>FOOD IMAGE RECOGNIZING <span class="copyright">2026 C</span></p>
+    <p>FOOD IMAGE RECOGNIZING <span class="copyright">2026 &copy;</span></p>
 </div>
 """, unsafe_allow_html=True)
