@@ -48,40 +48,77 @@ st.markdown("""
     
     .header {
         background: #ffffff;
-        padding: 2rem 2rem 1.5rem 2rem;
+        padding: 2.5rem 2rem 1.5rem 2rem;
         margin-bottom: 2rem;
         text-align: center;
         position: relative;
     }
     .header h1 {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
         font-weight: 300;
-        letter-spacing: 8px;
+        letter-spacing: 10px;
         color: #1a1a1a;
         margin: 0;
         text-transform: uppercase;
-        text-shadow: 0 0 10px rgba(26, 26, 26, 0.05),
-                     0 0 20px rgba(26, 26, 26, 0.03),
-                     0 0 40px rgba(26, 26, 26, 0.02);
-        animation: glow 3s ease-in-out infinite alternate;
+        text-shadow: 0 0 10px rgba(26, 26, 26, 0.1),
+                     0 0 20px rgba(26, 26, 26, 0.05),
+                     0 0 40px rgba(26, 26, 26, 0.03),
+                     0 0 80px rgba(26, 26, 26, 0.02);
+        animation: glowPulse 3s ease-in-out infinite alternate;
+        transition: all 0.3s ease;
     }
-    @keyframes glow {
-        from { text-shadow: 0 0 10px rgba(26, 26, 26, 0.05), 0 0 20px rgba(26, 26, 26, 0.03); }
-        to { text-shadow: 0 0 20px rgba(26, 26, 26, 0.15), 0 0 40px rgba(26, 26, 26, 0.08), 0 0 60px rgba(26, 26, 26, 0.04); }
+    .header h1:hover {
+        text-shadow: 0 0 15px rgba(26, 26, 26, 0.2),
+                     0 0 30px rgba(26, 26, 26, 0.1),
+                     0 0 60px rgba(26, 26, 26, 0.05),
+                     0 0 100px rgba(26, 26, 26, 0.02);
+    }
+    @keyframes glowPulse {
+        0% {
+            text-shadow: 0 0 10px rgba(26, 26, 26, 0.05),
+                         0 0 20px rgba(26, 26, 26, 0.02),
+                         0 0 40px rgba(26, 26, 26, 0.01);
+            letter-spacing: 10px;
+        }
+        50% {
+            text-shadow: 0 0 20px rgba(26, 26, 26, 0.12),
+                         0 0 40px rgba(26, 26, 26, 0.06),
+                         0 0 60px rgba(26, 26, 26, 0.03);
+            letter-spacing: 12px;
+        }
+        100% {
+            text-shadow: 0 0 30px rgba(26, 26, 26, 0.18),
+                         0 0 60px rgba(26, 26, 26, 0.09),
+                         0 0 90px rgba(26, 26, 26, 0.04),
+                         0 0 120px rgba(26, 26, 26, 0.02);
+            letter-spacing: 14px;
+        }
     }
     .header p {
         font-size: 0.6rem;
         color: #888888;
-        margin: 0.5rem 0 0 0;
+        margin: 0.6rem 0 0 0;
         font-weight: 300;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         text-transform: none;
+        animation: fadeInUp 1s ease-out;
+    }
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     .header-line {
-        width: 60px;
+        width: 200px;
         height: 1px;
-        background: #1a1a1a;
-        margin: 1rem auto 0 auto;
+        background: linear-gradient(to right, transparent, #1a1a1a 20%, #1a1a1a 80%, transparent);
+        margin: 1.2rem auto 0 auto;
+        opacity: 0.6;
     }
     
     .sidebar-title {
