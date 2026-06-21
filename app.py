@@ -57,14 +57,14 @@ st.markdown("""
         font-size: 1.8rem;
         font-weight: 300;
         letter-spacing: 10px;
-        color: #1a1a1a;
+        color: #89CFF0;
         margin: 0;
         text-transform: uppercase;
         display: inline-block;
         position: relative;
         padding-bottom: 10px;
+        text-shadow: 0 0 20px rgba(137, 207, 240, 0.15);
     }
-    /* Line duy nhất dưới chữ - to nhỏ căn giữa */
     .header h1::after {
         content: '';
         position: absolute;
@@ -73,35 +73,21 @@ st.markdown("""
         transform: translateX(-50%);
         width: 0;
         height: 1.5px;
-        background: #1a1a1a;
+        background: #89CFF0;
         animation: breatheLine 3.5s ease-in-out infinite;
         border-radius: 2px;
+        box-shadow: 0 0 10px rgba(137, 207, 240, 0.3);
     }
     @keyframes breatheLine {
-        0% {
-            width: 0%;
-            opacity: 0.2;
-        }
-        20% {
-            width: 20%;
-            opacity: 0.5;
-        }
-        50% {
-            width: 70%;
-            opacity: 0.9;
-        }
-        80% {
-            width: 20%;
-            opacity: 0.5;
-        }
-        100% {
-            width: 0%;
-            opacity: 0.2;
-        }
+        0% { width: 0%; opacity: 0.2; }
+        20% { width: 20%; opacity: 0.5; }
+        50% { width: 70%; opacity: 0.9; }
+        80% { width: 20%; opacity: 0.5; }
+        100% { width: 0%; opacity: 0.2; }
     }
     .header p {
         font-size: 0.6rem;
-        color: #888888;
+        color: #B0C4DE;
         margin: 0.8rem 0 0 0;
         font-weight: 300;
         letter-spacing: 3px;
@@ -123,61 +109,63 @@ st.markdown("""
         font-size: 0.7rem;
         font-weight: 400;
         letter-spacing: 4px;
-        color: #1a1a1a;
+        color: #89CFF0;
         text-transform: uppercase;
         margin-bottom: 0.5rem;
     }
     
     .menu-item {
         padding: 0.3rem 0;
-        border-bottom: 1px solid #eeeeee;
+        border-bottom: 1px solid #E8F4F8;
         font-size: 0.65rem;
-        color: #1a1a1a;
+        color: #2C3E50;
         font-weight: 300;
         transition: all 0.2s;
     }
     .menu-item:hover {
-        border-bottom: 1px solid #1a1a1a;
+        border-bottom: 1px solid #89CFF0;
         padding-left: 0.5rem;
+        color: #89CFF0;
     }
     .menu-price {
         float: right;
-        color: #22c55e;
+        color: #89CFF0;
         font-weight: 400;
     }
     .menu-category {
         font-size: 0.55rem;
-        color: #999999;
+        color: #B0C4DE;
         letter-spacing: 2px;
         text-transform: uppercase;
         margin: 0.8rem 0 0.2rem 0;
-        border-bottom: 1px solid #eeeeee;
+        border-bottom: 1px solid #E8F4F8;
         padding-bottom: 0.2rem;
     }
     
     .total-card {
-        background: #ffffff;
-        border: 1px solid #1a1a1a;
+        background: #F0F8FF;
+        border: 1px solid #89CFF0;
         padding: 1.5rem;
         text-align: center;
         margin: 1rem 0;
+        border-radius: 8px;
     }
     .total-card .label {
-        color: #999999;
+        color: #B0C4DE;
         font-size: 0.5rem;
         font-weight: 300;
         letter-spacing: 4px;
         text-transform: uppercase;
     }
     .total-card .amount {
-        color: #22c55e;
+        color: #89CFF0;
         font-size: 2.2rem;
         font-weight: 300;
         letter-spacing: 3px;
         margin: 0.3rem 0;
     }
     .total-card .summary {
-        color: #999999;
+        color: #B0C4DE;
         font-size: 0.55rem;
         font-weight: 300;
         letter-spacing: 2px;
@@ -187,35 +175,35 @@ st.markdown("""
         display: flex;
         justify-content: space-between;
         padding: 0.4rem 0;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid #E8F4F8;
         font-size: 0.65rem;
-        color: #333333;
+        color: #2C3E50;
     }
     .invoice-row:hover {
-        background: #fafafa;
+        background: #F8FBFF;
     }
     .invoice-row .price {
-        color: #22c55e;
+        color: #89CFF0;
     }
     .invoice-total {
         display: flex;
         justify-content: space-between;
         padding: 0.6rem 0;
-        border-top: 2px solid #1a1a1a;
+        border-top: 2px solid #89CFF0;
         font-size: 0.75rem;
         font-weight: 500;
-        color: #1a1a1a;
+        color: #2C3E50;
         margin-top: 0.5rem;
     }
     .invoice-total .total-price {
-        color: #22c55e;
+        color: #89CFF0;
     }
     
     .stButton button {
         background: #ffffff;
-        color: #1a1a1a;
-        border: 1px solid #1a1a1a;
-        border-radius: 0px;
+        color: #89CFF0;
+        border: 1px solid #89CFF0;
+        border-radius: 4px;
         padding: 0.6rem 2rem;
         font-size: 0.65rem;
         font-weight: 300;
@@ -225,42 +213,45 @@ st.markdown("""
         transition: all 0.2s ease;
     }
     .stButton button:hover {
-        background: #1a1a1a;
+        background: #89CFF0;
         color: #ffffff;
+        border-color: #89CFF0;
+        box-shadow: 0 4px 15px rgba(137, 207, 240, 0.3);
     }
     
     .streamlit-expanderHeader {
         background: #ffffff !important;
-        border: 1px solid #1a1a1a !important;
-        border-radius: 0px !important;
-        color: #1a1a1a !important;
+        border: 1px solid #89CFF0 !important;
+        border-radius: 4px !important;
+        color: #89CFF0 !important;
         font-size: 0.65rem !important;
         font-weight: 300 !important;
         letter-spacing: 3px !important;
         text-transform: uppercase !important;
     }
     .streamlit-expanderHeader:hover {
-        background: #f7f7f7 !important;
+        background: #F0F8FF !important;
+        border-color: #89CFF0 !important;
     }
     .streamlit-expanderContent {
         background: #ffffff !important;
-        border: 1px solid #1a1a1a !important;
+        border: 1px solid #89CFF0 !important;
         border-top: none !important;
-        border-radius: 0px !important;
+        border-radius: 0 0 4px 4px !important;
         padding: 1rem !important;
     }
     
     .stAlert {
-        border-radius: 0px !important;
-        background: #f7f7f7 !important;
-        border-left: 3px solid #1a1a1a !important;
-        color: #333333 !important;
+        border-radius: 4px !important;
+        background: #F0F8FF !important;
+        border-left: 3px solid #89CFF0 !important;
+        color: #2C3E50 !important;
         font-weight: 300 !important;
         font-size: 0.65rem !important;
     }
     
     .stImage figcaption {
-        color: #999999 !important;
+        color: #B0C4DE !important;
         font-size: 0.5rem !important;
         font-weight: 300 !important;
         letter-spacing: 2px !important;
@@ -271,14 +262,14 @@ st.markdown("""
     .footer {
         text-align: center;
         padding: 1.5rem 0 0.5rem 0;
-        color: #999999;
+        color: #B0C4DE;
         font-size: 0.55rem;
-        border-top: 1px solid #eeeeee;
+        border-top: 1px solid #E8F4F8;
         margin-top: 1.5rem;
         letter-spacing: 2px;
     }
     .footer .copyright {
-        color: #999999;
+        color: #B0C4DE;
         font-weight: 300;
     }
     
@@ -290,15 +281,15 @@ st.markdown("""
         margin-right: 8px;
     }
     .status-dot.green {
-        background: #22c55e;
+        background: #89CFF0;
     }
     .status-dot.red {
-        background: #cccccc;
+        background: #FFB3BA;
     }
     
     .model-info {
         font-size: 0.55rem;
-        color: #888888;
+        color: #B0C4DE;
         letter-spacing: 1px;
         padding: 0.3rem 0;
     }
@@ -306,8 +297,9 @@ st.markdown("""
     .extra-input {
         margin: 0.5rem 0;
         padding: 0.5rem;
-        border: 1px solid #eeeeee;
-        background: #fafafa;
+        border: 1px solid #E8F4F8;
+        background: #F8FBFF;
+        border-radius: 4px;
     }
     
     .prediction-item {
@@ -316,33 +308,34 @@ st.markdown("""
     .prediction-item .main {
         font-weight: 400;
         font-size: 0.8rem;
-        color: #1a1a1a;
+        color: #2C3E50;
     }
     .prediction-item .main .conf {
-        color: #888888;
+        color: #B0C4DE;
         font-size: 0.6rem;
         font-weight: 300;
     }
     .prediction-item .sub {
         font-size: 0.55rem;
-        color: #22c55e;
+        color: #89CFF0;
         font-weight: 300;
     }
     .prediction-item .alt {
-        color: #bbbbbb;
+        color: #C5D5E5;
         font-size: 0.6rem;
     }
     .prediction-item .alt .conf-alt {
-        color: #cccccc;
+        color: #D5E5F0;
         font-size: 0.5rem;
     }
     
     .qr-container {
-        border: 1px solid #1a1a1a;
+        border: 1px solid #89CFF0;
         padding: 1rem;
         text-align: center;
         background: #ffffff;
         margin: 1rem 0;
+        border-radius: 8px;
     }
     .qr-container img {
         max-width: 180px;
@@ -351,18 +344,18 @@ st.markdown("""
     .qr-container .qr-amount {
         font-size: 1.2rem;
         font-weight: 300;
-        color: #22c55e;
+        color: #89CFF0;
         margin: 0.3rem 0;
     }
     .qr-container .qr-bank {
         font-size: 0.55rem;
-        color: #666666;
+        color: #B0C4DE;
         font-weight: 300;
         letter-spacing: 1px;
     }
     .qr-container .qr-label {
         font-size: 0.5rem;
-        color: #999999;
+        color: #B0C4DE;
         font-weight: 300;
         letter-spacing: 2px;
         text-transform: uppercase;
@@ -370,15 +363,16 @@ st.markdown("""
     }
     
     .camera-container {
-        border: 1px solid #1a1a1a;
+        border: 1px solid #89CFF0;
         padding: 1rem;
         text-align: center;
-        background: #fafafa;
+        background: #F8FBFF;
         margin: 1rem 0;
+        border-radius: 8px;
     }
     .camera-container .camera-label {
         font-size: 0.55rem;
-        color: #666666;
+        color: #B0C4DE;
         font-weight: 300;
         letter-spacing: 2px;
         text-transform: uppercase;
@@ -386,21 +380,25 @@ st.markdown("""
     
     ::-webkit-scrollbar {
         width: 4px;
-        background: #f7f7f7;
+        background: #F8FBFF;
     }
     ::-webkit-scrollbar-thumb {
-        background: #1a1a1a;
+        background: #89CFF0;
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #6BB5D8;
     }
     
     .css-1d391kg {
         background-color: #ffffff !important;
-        border-right: 1px solid #eeeeee !important;
+        border-right: 1px solid #E8F4F8 !important;
     }
     .css-1d391kg .stMarkdown {
-        color: #333333 !important;
+        color: #2C3E50 !important;
     }
     .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
-        color: #1a1a1a !important;
+        color: #89CFF0 !important;
         font-weight: 300 !important;
         letter-spacing: 3px !important;
         font-size: 0.7rem !important;
@@ -409,7 +407,7 @@ st.markdown("""
     
     hr {
         border: none;
-        border-top: 1px solid #eeeeee;
+        border-top: 1px solid #E8F4F8;
         margin: 1rem 0;
     }
 </style>
@@ -584,7 +582,7 @@ with col_right:
                             top3_idx = np.argsort(predictions)[-3:][::-1]
                             top3_conf = predictions[top3_idx]
                             
-                            st.markdown('<div style="font-size:0.5rem;color:#999;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.3rem;">Predictions</div>', unsafe_allow_html=True)
+                            st.markdown('<div style="font-size:0.5rem;color:#B0C4DE;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.3rem;">Predictions</div>', unsafe_allow_html=True)
                             
                             for i, (fid, conf) in enumerate(zip(top3_idx, top3_conf)):
                                 name = get_food_name(fid)
@@ -686,8 +684,8 @@ with col_right:
     
     else:
         st.info("Take a photo and click RECOGNIZE")
-        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Camera capture</div>', unsafe_allow_html=True)
-        st.markdown('<div style="font-size:0.5rem;color:#ccc;letter-spacing:2px;">▸ Automatic segmentation</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.5rem;color:#B0C4DE;letter-spacing:2px;">▸ Camera capture</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.5rem;color:#B0C4DE;letter-spacing:2px;">▸ Automatic segmentation</div>', unsafe_allow_html=True)
 
 
 st.markdown("""
