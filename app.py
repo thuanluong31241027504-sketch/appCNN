@@ -52,7 +52,6 @@ st.markdown("""
         margin-bottom: 2rem;
         text-align: center;
         position: relative;
-        overflow: hidden;
     }
     .header h1 {
         font-size: 1.8rem;
@@ -65,6 +64,7 @@ st.markdown("""
         position: relative;
         padding-bottom: 10px;
     }
+    /* Line duy nhất dưới chữ - to nhỏ căn giữa */
     .header h1::after {
         content: '';
         position: absolute;
@@ -72,31 +72,31 @@ st.markdown("""
         left: 50%;
         transform: translateX(-50%);
         width: 0;
-        height: 2px;
+        height: 1.5px;
         background: #1a1a1a;
-        animation: breatheLine 3s ease-in-out infinite;
+        animation: breatheLine 3.5s ease-in-out infinite;
         border-radius: 2px;
     }
     @keyframes breatheLine {
         0% {
             width: 0%;
-            opacity: 0.3;
+            opacity: 0.2;
         }
-        25% {
-            width: 30%;
-            opacity: 0.6;
+        20% {
+            width: 20%;
+            opacity: 0.5;
         }
         50% {
-            width: 80%;
-            opacity: 1;
+            width: 70%;
+            opacity: 0.9;
         }
-        75% {
-            width: 30%;
-            opacity: 0.6;
+        80% {
+            width: 20%;
+            opacity: 0.5;
         }
         100% {
             width: 0%;
-            opacity: 0.3;
+            opacity: 0.2;
         }
     }
     .header p {
@@ -117,14 +117,6 @@ st.markdown("""
             opacity: 1;
             transform: translateY(0);
         }
-    }
-    .header-line {
-        width: 400px;
-        max-width: 80%;
-        height: 1px;
-        background: linear-gradient(to right, transparent, #1a1a1a 15%, #1a1a1a 85%, transparent);
-        margin: 1.2rem auto 0 auto;
-        opacity: 0.4;
     }
     
     .sidebar-title {
@@ -470,7 +462,6 @@ st.markdown("""
 <div class="header">
     <h1>FOOD IMAGE RECOGNIZING</h1>
     <p>Mo hinh CNN trong nhan dien mon an va tinh tien tu dong</p>
-    <div class="header-line"></div>
 </div>
 """, unsafe_allow_html=True)
 
