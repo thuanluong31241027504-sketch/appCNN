@@ -1,1 +1,135 @@
+from google.colab import drive
+drive.mount('/content/drive', force_remount=True)
+============================================================================================
+import numpy as np
+import tensorflow as tf
+from keras.layers import Conv2D, Flatten, MaxPooling2D, BatchNormalization, Dense, Dropout, GlobalAveragePooling2D, Input, Rescaling
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.optimizers import Adam
+
+import os
+import warnings
+warnings.filterwarnings('ignore')
+============================================================================================
+batch_size = 32
+direction = '/content/drive/MyDrive/AI CUỐI KỲ BALANCED'
+input_size = (224,224)
+num_classes = 10
+============================================================================================
+print(os.listdir(direction))
+============================================================================================
+import os
+
+direction = '/content/drive/MyDrive/AI CUỐI KỲ BALANCED'
+
+total = 0
+for folder in sorted(os.listdir(direction)):
+    folder_path = os.path.join(direction, folder)
+    if os.path.isdir(folder_path):
+        count = len(os.listdir(folder_path))
+        total += count
+        print(f"{folder}: {count} ảnh")
+
+print(f"\nTổng cộng: {total} ảnh")
+============================================================================================
+train_ds = tf.keras.utils.image_dataset_from_directory(
+    direction,
+    image_size=input_size,
+    batch_size=batch_size,
+    validation_split=0.2,
+    subset="training",
+    seed=123,
+    label_mode='categorical'
+)
+
+val_ds = tf.keras.utils.image_dataset_from_directory(
+    direction,
+    image_size=input_size,
+    batch_size=batch_size,
+    validation_split=0.2,
+    subset="validation",
+    seed=123,
+    label_mode='categorical'
+)
+============================================================================================
+data_augmentation = tf.keras.Sequential([
+    tf.keras.layers.RandomFlip("horizontal"),
+    tf.keras.layers.RandomRotation(0.2),
+    tf.keras.layers.RandomZoom(0.2),
+    tf.keras.layers.RandomBrightness(0.2),
+    tf.keras.layers.RandomContrast(0.2),
+])
+============================================================================================
+AUTOTUNE = tf.data.AUTOTUNE
+train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
+val_ds   = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+============================================================================================
+base_model = MobileNetV2(
+    input_shape=(224,224,3),
+    include_top=False,
+    weights='imagenet'
+)
+base_model.trainable = False
+============================================================================================
+model = Sequential([
+    Input(shape=(224,224,3)),
+    data_augmentation,
+    Rescaling(1./127.5, offset=-1),
+    base_model,
+    GlobalAveragePooling2D(),
+    BatchNormalization(),
+    Dropout(0.3),
+    Dense(256, activation='relu'),
+    Dropout(0.3),
+    Dense(num_classes, activation='softmax')
+])
+============================================================================================
+model.compile(
+    optimizer=Adam(learning_rate=1e-3),
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+model.summary()
+============================================================================================
+callbacks_phase1 = [
+    EarlyStopping(monitor='val_accuracy', patience=5, restore_best_weights=True, verbose=1),
+    ModelCheckpoint('best_model_phase1.keras', monitor='val_accuracy', save_best_only=True, verbose=1)
+]
+history1 =model.fit(train_ds, epochs= 20, validation_data=val_ds, callbacks=callbacks_phase1)
+============================================================================================
+history2 = model.fit(
+    train_ds,
+    epochs=30,
+    validation_data=val_ds,
+    callbacks=callbacks_phase2
+)
+============================================================================================
+import matplotlib.pyplot as plt
+
+# Gộp history 2 phase
+acc     = history1.history['accuracy']     + history2.history['accuracy']
+val_acc = history1.history['val_accuracy'] + history2.history['val_accuracy']
+loss    = history1.history['loss']         + history2.history['loss']
+val_loss= history1.history['val_loss']     + history2.history['val_loss']
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+axes[0].plot(acc, label='train')
+axes[0].plot(val_acc, label='val')
+axes[0].axvline(x=len(history1.history['accuracy'])-1, color='gray', linestyle='--', label='fine-tune start')
+axes[0].set_title('Accuracy')
+axes[0].legend()
+
+axes[1].plot(loss, label='train')
+axes[1].plot(val_loss, label='val')
+axes[1].axvline(x=len(history1.history['loss'])-1, color='gray', linestyle='--', label='fine-tune start')
+axes[1].set_title('Loss')
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+
+print(f"\nBest val_accuracy: {max(val_acc):.4f}")
 
