@@ -61,71 +61,43 @@ st.markdown("""
         color: #1a1a1a;
         margin: 0;
         text-transform: uppercase;
-        animation: breatheGlow 4s ease-in-out infinite;
         display: inline-block;
         position: relative;
-    }
-    @keyframes breatheGlow {
-        0% {
-            text-shadow: 0 0 5px rgba(26, 26, 26, 0.02);
-            letter-spacing: 8px;
-            opacity: 0.7;
-            transform: scale(1);
-        }
-        20% {
-            text-shadow: 0 0 15px rgba(26, 26, 26, 0.08),
-                         0 0 30px rgba(26, 26, 26, 0.04);
-            letter-spacing: 12px;
-            opacity: 1;
-            transform: scale(1.02);
-        }
-        40% {
-            text-shadow: 0 0 25px rgba(26, 26, 26, 0.15),
-                         0 0 50px rgba(26, 26, 26, 0.08),
-                         0 0 80px rgba(26, 26, 26, 0.04);
-            letter-spacing: 16px;
-            opacity: 1;
-            transform: scale(1.05);
-        }
-        60% {
-            text-shadow: 0 0 15px rgba(26, 26, 26, 0.08),
-                         0 0 30px rgba(26, 26, 26, 0.04);
-            letter-spacing: 12px;
-            opacity: 0.9;
-            transform: scale(1.02);
-        }
-        80% {
-            text-shadow: 0 0 5px rgba(26, 26, 26, 0.02);
-            letter-spacing: 8px;
-            opacity: 0.7;
-            transform: scale(1);
-        }
-        100% {
-            text-shadow: 0 0 5px rgba(26, 26, 26, 0.02);
-            letter-spacing: 8px;
-            opacity: 0.7;
-            transform: scale(1);
-        }
+        padding-bottom: 10px;
     }
     .header h1::after {
         content: '';
         position: absolute;
-        bottom: -5px;
+        bottom: 0;
         left: 50%;
         transform: translateX(-50%);
         width: 0;
-        height: 1px;
+        height: 2px;
         background: #1a1a1a;
-        animation: lineExpand 4s ease-in-out infinite;
+        animation: breatheLine 3s ease-in-out infinite;
+        border-radius: 2px;
     }
-    @keyframes lineExpand {
-        0% { width: 0; opacity: 0; }
-        20% { width: 30%; opacity: 0.3; }
-        40% { width: 80%; opacity: 0.6; }
-        50% { width: 100%; opacity: 0.8; }
-        60% { width: 80%; opacity: 0.6; }
-        80% { width: 30%; opacity: 0.3; }
-        100% { width: 0; opacity: 0; }
+    @keyframes breatheLine {
+        0% {
+            width: 0%;
+            opacity: 0.3;
+        }
+        25% {
+            width: 30%;
+            opacity: 0.6;
+        }
+        50% {
+            width: 80%;
+            opacity: 1;
+        }
+        75% {
+            width: 30%;
+            opacity: 0.6;
+        }
+        100% {
+            width: 0%;
+            opacity: 0.3;
+        }
     }
     .header p {
         font-size: 0.6rem;
@@ -152,7 +124,7 @@ st.markdown("""
         height: 1px;
         background: linear-gradient(to right, transparent, #1a1a1a 15%, #1a1a1a 85%, transparent);
         margin: 1.2rem auto 0 auto;
-        opacity: 0.5;
+        opacity: 0.4;
     }
     
     .sidebar-title {
