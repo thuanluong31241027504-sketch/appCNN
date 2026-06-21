@@ -8,6 +8,7 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import base64
+import random
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -95,14 +96,8 @@ st.markdown("""
         animation: fadeInUp 1.5s ease-out;
     }
     @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
     .sidebar-title {
@@ -432,22 +427,7 @@ def check_model_files():
 
 @st.cache_resource
 def load_model():
-    model_files = check_model_files()
-    if not model_files:
-        return None
-    
-    onnx_files = [f for f in model_files if f['name'] == 'food_model.onnx']
-    if not onnx_files:
-        onnx_files = [f for f in model_files if f['name'].endswith('.onnx')]
-    
-    if onnx_files:
-        chosen = onnx_files[0]
-        try:
-            session = ort.InferenceSession(chosen['path'])
-            return session
-        except Exception:
-            return None
-    
+    # KHÔNG CẦN LOAD MODEL NỮA VÌ FAKE CODE
     return None
 
 
@@ -490,14 +470,8 @@ with st.sidebar:
     model_files = check_model_files()
     model_ready = len(model_files) > 0
     
-    status_html = render_status_dot(model_ready)
-    if model_ready:
-        st.markdown(f'{status_html} **MODEL READY**', unsafe_allow_html=True)
-        for mf in model_files:
-            st.markdown(f'<div class="model-info">▸ {mf["name"]} ({mf["size"]:.1f} MB)</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'{status_html} **MODEL NOT FOUND**', unsafe_allow_html=True)
-        st.markdown('<div class="model-info">Upload food_model.onnx</div>', unsafe_allow_html=True)
+    status_html = render_status_dot(True)  # Fake mode luôn READY
+    st.markdown(f'{status_html} **FAKE MODE - NO MODEL**', unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown(f'<div class="model-info">{datetime.now().strftime("%Y-%m-%d %H:%M")}</div>', unsafe_allow_html=True)
@@ -517,15 +491,9 @@ with col_left:
         
         if st.button("Recognize", use_container_width=True):
             with st.spinner("Processing..."):
-                session = load_model()
-                
-                if session is None:
-                    st.error("Model not found")
-                else:
-                    st.session_state['image'] = image
-                    st.session_state['session'] = session
-                    st.session_state['processed'] = True
-                    st.rerun()
+                st.session_state['image'] = image
+                st.session_state['processed'] = True
+                st.rerun()
     else:
         st.info("Click the camera button above to take a photo")
         st.markdown('<div class="camera-container"><div class="camera-label">Ready to capture</div></div>', unsafe_allow_html=True)
@@ -537,7 +505,6 @@ with col_right:
     
     if 'processed' in st.session_state and st.session_state['processed']:
         image = st.session_state['image']
-        session = st.session_state['session']
         
         with st.spinner("Segmenting..."):
             cropped_results, img_resized = crop_food_items(image)
@@ -551,6 +518,20 @@ with col_right:
             detected_foods = []
             food_details = []
             extras = {}
+            
+            # FAKE DATA CỨNG CHO 5 KHAY
+            fake_config = {
+                1: {"fid": 7, "name": "Canh rau", "price": 7000},        # Khay 1
+                2: {"fid": 0, "name": "Com trang", "price": 10000},       # Khay 2
+                3: {"fid": 2, "name": "Ca hu kho", "price": 30000},       # Khay 3
+                4: {"fid": 6, "name": "Suon nuong", "price": 30000},      # Khay 4
+                5: {"fid": 3, "name": "Thit kho trung", "price": 30000},  # Khay 5
+            }
+            
+            # Các món khác để làm top 3
+            all_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            
+            random.seed(datetime.now().timestamp())
             
             for idx, result in enumerate(cropped_results):
                 cropped_img = result["image"]
@@ -571,48 +552,60 @@ with col_right:
                     
                     with col_info:
                         try:
-                            preprocessed = preprocess_image(cropped_img, target_size=(224, 224))
-                            
-                            input_name = session.get_inputs()[0].name
-                            output_name = session.get_outputs()[0].name
-                            
-                            result_onnx = session.run([output_name], {input_name: preprocessed})
-                            predictions = result_onnx[0][0]
-                            
-                            top3_idx = np.argsort(predictions)[-3:][::-1]
-                            top3_conf = predictions[top3_idx]
-                            
-                            st.markdown('<div style="font-size:0.5rem;color:#B0C4DE;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.3rem;">Predictions</div>', unsafe_allow_html=True)
-                            
-                            for i, (fid, conf) in enumerate(zip(top3_idx, top3_conf)):
-                                name = get_food_name(fid)
-                                price = get_food_price(fid)
-                                if i == 0:
-                                    st.markdown(f'<div class="prediction-item"><span class="main">▸ {name} <span class="conf">{conf*100:.1f}%</span></span><br><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
-                                    detected_foods.append(fid)
-                                    
-                                    if has_extra_option(fid):
-                                        extra_key = len(detected_foods) - 1
-                                        egg_count = st.number_input(
-                                            "Extra eggs",
-                                            min_value=0,
-                                            max_value=10,
-                                            value=0,
-                                            step=1,
-                                            key=f"egg_{khay_id}",
-                                            help="Add extra eggs (+6,000 VND each)"
-                                        )
-                                        if egg_count > 0:
-                                            extras[extra_key] = egg_count
-                                    
-                                    food_details.append({
-                                        "tray": khay_id,
-                                        "name": name,
-                                        "price": price,
-                                        "confidence": conf
-                                    })
-                                else:
-                                    st.markdown(f'<div class="prediction-item"><span class="alt">{name} <span class="conf-alt">{conf*100:.1f}%</span></span></div>', unsafe_allow_html=True)
+                            # Lấy config cho khay này
+                            if khay_id in fake_config:
+                                config = fake_config[khay_id]
+                                fid = config["fid"]
+                                
+                                # Random confidence cho main (85-99%)
+                                conf_main = random.uniform(0.85, 0.99)
+                                name = config["name"]
+                                price = config["price"]
+                                
+                                # Lấy 2 ID khác để làm top 2 và 3 (không trùng với main)
+                                other_ids = [i for i in all_ids if i != fid]
+                                id2 = random.choice(other_ids)
+                                id3 = random.choice([i for i in other_ids if i != id2])
+                                
+                                # Random confidence thấp hơn main (20-50%)
+                                conf2 = random.uniform(0.20, 0.50)
+                                conf3 = random.uniform(0.10, 0.35)
+                                
+                                name2 = get_food_name(id2)
+                                name3 = get_food_name(id3)
+                                price2 = get_food_price(id2)
+                                price3 = get_food_price(id3)
+                                
+                                st.markdown('<div style="font-size:0.5rem;color:#B0C4DE;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.3rem;">Predictions</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="prediction-item"><span class="main">▸ {name} <span class="conf">{conf_main*100:.1f}%</span></span><br><span class="sub">{price:,} VND</span></div>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="prediction-item"><span class="alt">{name2} <span class="conf-alt">{conf2*100:.1f}%</span></span></div>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="prediction-item"><span class="alt">{name3} <span class="conf-alt">{conf3*100:.1f}%</span></span></div>', unsafe_allow_html=True)
+                                
+                                detected_foods.append(fid)
+                                
+                                if has_extra_option(fid):
+                                    extra_key = len(detected_foods) - 1
+                                    egg_count = st.number_input(
+                                        "Extra eggs",
+                                        min_value=0,
+                                        max_value=10,
+                                        value=0,
+                                        step=1,
+                                        key=f"egg_{khay_id}",
+                                        help="Add extra eggs (+6,000 VND each)"
+                                    )
+                                    if egg_count > 0:
+                                        extras[extra_key] = egg_count
+                                
+                                food_details.append({
+                                    "tray": khay_id,
+                                    "name": name,
+                                    "price": price,
+                                    "confidence": conf_main,
+                                    "fake": True
+                                })
+                            else:
+                                st.warning(f"Khay {khay_id} không có cấu hình fake")
                             
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
@@ -645,10 +638,11 @@ with col_right:
                 with st.expander("Invoice Details", expanded=False):
                     for i, detail in enumerate(details):
                         extra_text = detail.get('extra_text', '')
+                        fake_tag = " [FAKE]" if detail.get('fake', False) else ""
                         st.markdown(
                             f"<div class='invoice-row'>"
                             f"<span>#{i+1}</span>"
-                            f"<span>{detail['name']}{extra_text}</span>"
+                            f"<span>{detail['name']}{fake_tag}{extra_text}</span>"
                             f"<span class='price'>{detail['price']:,} VND</span>"
                             f"</div>",
                             unsafe_allow_html=True
@@ -665,7 +659,8 @@ with col_right:
                     invoice_text = f"INVOICE\n{'-'*30}\n"
                     for i, d in enumerate(details):
                         extra_text = d.get('extra_text', '')
-                        invoice_text += f"Tray {i+1}: {d['name']}{extra_text} - {d['price']:,} VND\n"
+                        fake_tag = " [FAKE]" if d.get('fake', False) else ""
+                        invoice_text += f"Tray {i+1}: {d['name']}{fake_tag}{extra_text} - {d['price']:,} VND\n"
                     invoice_text += f"{'-'*30}\nTOTAL: {total_price:,} VND"
                     
                     st.download_button(
